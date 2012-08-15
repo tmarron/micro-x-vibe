@@ -5,8 +5,6 @@
 # 
 # given two vibe datasets from marimba, it calculates the transfer function
 # ---------------
-import sys
-sys.path.append("/Users/jmrv/Documents/school/mit/research/software/chmc/")
 
 from numpy import *
 from matplotlib.pyplot import *
