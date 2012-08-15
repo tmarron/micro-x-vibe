@@ -43,3 +43,4 @@ if __name__ == "__main__":
 	inputSpectrum = sys.argv[1]
 	outputSpectrum = sys.argv[2]
 	makeTransfer(inputSpectrum, outputSpectrum)
+	print 'success'
