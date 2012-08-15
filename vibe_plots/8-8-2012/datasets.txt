@@ -1,0 +1,22 @@
+LMO is fully assembled on its cart. Both sets of dampers are attached. Fully pressurized. Capacitive accelerometer is attached to the LMO top lid.
+
+1: Sine sweep from 10-100 Hz ratioing the cheap accelerometer on the lid to the source. Shaken in Y, measured in Y. 
+2: As above, but accelerometer on the 80-20 cage base. 
+3: As with 1 but the top dampers are unattached. 
+4: As with 2 but the top dampers are unattached. 
+
+5-0: Accel on base but suspended from crane.
+5: Accel on base, suspended, damper screws out, skin screws in. 
+6-0: ratty data which we're not sure about
+6: top lid, damper screws in, skin screws in.
+7: Accel on base, damper screws in, skin screws in
+8: Accel on top lid, damper screws out, skin screws in
+
+9: accel on top of skin joint, reading out Y, UFO on top of 80-20 beam roughly in X direction (crane supports are roughly in Y), unbolted dampers 
+10: as with 9, but reading out X. 
+11: accel on skin, reading X, bolted dampers, UFO on beam. 
+12: accel on skin, reading Y, bolted dampers, UFO on beam. 
+13: accel on lid, reading Y, bolted dampers, UFO on beam.
+14: accel on lid, reading X, bolted dampers, UFO on beam.
+15: accel on lid, reading X, unbolted dampers, UFO on beam.
+16: accel on lid, reading Y, unbolted dampers, UFO on beam.

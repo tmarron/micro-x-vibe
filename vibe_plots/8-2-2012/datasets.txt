@@ -1,0 +1,28 @@
+LMO fully assembled. Skin left off. No attachment pieces from top plate to LMO cart. UFO placed on Z-axis.
+
+1: Measuring in Z. Sine sweep from 10 Hz to 1kHz. Measuring the FEA ratio witht the insert.
+2: Measuring in Y. Sine sweep from 10 Hz to 1kHz
+3: Measuring in X. Sine sweep from 10 Hz to 1kHz
+4: Measuring in Y. Sine sweep from 10 Hz to 1kHz. Measuring the FEA with respect to source (not the insert)
+5: Measuring in Y. Sine sweep from 10 Hz to 1kHz. Measuring the Insert with respect to source
+
+
+Move UFO to tension spring adapter
+
+6: Measuring in Y
+7: Measuring in X
+8: Measuring in Z
+
+
+Move UFO to Y axis
+
+9: Measure in Z
+10: Measure in Y
+11: Measure in X
+
+
+Move UFO to X axis
+
+12: Measure in X
+13: Measure in Y
+14: Measure in Z

@@ -1,0 +1,20 @@
+7-31-2012
+UFO on X side. Suspended from 4 bungee chords
+
+1: Measure on X. Sine sweep resolution of 100 pt/dc.
+2: Measure on Y. Sine sweep resolution of 100 pt/dc.
+3: Measure on Z. Sine sweep resolution of 100 pt/dc.
+
+UFO on Y side. Suspended from 4 bungee chords
+
+4: Measure on X. Sine sweep resolution of 100 pt/dc.
+5: Measure on Y. Sine sweep resolution of 100 pt/dc.
+6: Measure on Z. Sine sweep resolution of 100 pt/dc.
+
+UFO on Z side. Suspended from 4 bungee chords
+
+7: Measure on X. Sine sweep resolution of 100 pt/dc.
+8: Measure on Y. Sine sweep resolution of 100 pt/dc.
+9: Measure on Z. Sine sweep resolution of 100 pt/dc.
+
+

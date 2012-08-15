@@ -1,0 +1,8 @@
+Using the new linear actuator with 2 rubber feet. Crane suspension is off. Hooked up to channel 1 of the Dsi1000 amplifier (all settings default straight from the box).
+
+1: Looking at capacitive vibrometer on LMO top lid ratio with source. Source is a sine sweep from 10-100 Hz. Top dampers are unbolted. Actuator is underneath LMO, thus vibrations are in Z. Measuring vibrations in Y.
+
+2: Same as 1, measuring in Z.
+3: Accelerometer moved to cage. Shaking in Z, measuring in Z.
+4: Same as 3 with top dampers bolted down.
+5: Moved accelerometer to top of LMO lid.
