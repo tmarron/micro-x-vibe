@@ -1,0 +1,29 @@
+Using the new linear actuator with 2 rubber feet. Crane suspension is off. Hooked up to channel 1 of the Dsi1000 amplifier (all settings default straight from the box).
+
+So, shaking in Z. Same presets and levels as 8/15
+
+Under vacuum (7mbar) with shims in
+1: Insert Z
+2: FEA Z
+3: Ratio Z
+
+4: Insert Y
+5: FEA Y
+6: Ratio Y
+
+7: Insert X
+8: FEA X
+9: Ratio X
+
+Under vacuum (7mbar) without shims
+10: Insert Z
+11: FEA Z
+12: Ratio Z
+
+13: Insert Y
+14: FEA Y
+15: Ratio Y
+
+16: Insert X
+17: FEA X
+18: Ratio X
