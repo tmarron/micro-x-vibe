@@ -72,3 +72,40 @@ ylim(0,3)
 show()
 
 print '\n looks like the resonant frequency shifts from 52 Hz to 58 Hz when the shims are added. \n'
+
+# fea with/without top dampers:
+withshims = 'vibe_plots/8-15-2012/13.txt'
+withoutshims = 'vibe_plots/8-15-2012/7.txt'
+withoutdampers = 'vibe_plots/8-15-2012/10.txt'
+
+f, A_with = readSpectrum(withshims)
+f, A_without = readSpectrum(withoutshims)
+f, A_nodampers = readSpectrum(withoutdampers)
+
+scaling = 1e4
+A_with = A_with*scaling
+A_without = A_without*scaling
+A_nodampers = A_nodampers*scaling
+
+subplot(211)
+semilogx(f, A_with, 'k')
+semilogx(f, A_without, 'b')
+semilogx(f, A_nodampers, 'r')
+xlim(10, 1000)
+legend(['with shims','without shims','no dampers'])
+title('frequency shift from adding shims: FEA')
+ylabel('amplitude [arb]')
+grid(which = 'both', axis='x')
+
+subplot(212)
+plot(f, A_with, 'k')
+plot(f, A_without, 'b')
+plot(f, A_nodampers, 'r')
+xlim(30,90)
+xlabel('frequency [Hz]')
+ylabel('amplitude [arb]')
+ylim(0,3)
+
+show()
+
+print '\n looks like the resonant frequency shifts from 52 Hz to 58 Hz when the shims are added. \n'

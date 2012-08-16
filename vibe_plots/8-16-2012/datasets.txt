@@ -27,3 +27,23 @@ Under vacuum (7mbar) without shims
 16: Insert X
 17: FEA X
 18: Ratio X
+
+Under vacuum, no shims, reading out skin and lid with flight accels
+19: skin Z
+20: lid z
+21: ratio z
+
+Under vacuum, no shims, reading out skin and lid with flight accels
+22: skin y
+23: lid y
+24: ratio y
+
+Under vacuum, with shims, reading out skin and lid with flight accels
+25: skin y
+26: lid y
+27: ratio y
+
+Under vacuum, with shims, reading out skin and lid with flight accels
+28: skin Z
+29: lid z
+30: ratio z

@@ -1,5 +1,5 @@
 # ---------------
-# transfer-function
+# transferFunction
 #
 # jmrv 08.2012
 # 
