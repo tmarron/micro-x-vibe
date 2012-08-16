@@ -12,7 +12,7 @@ import multiprocessing as multi
 
 def readSpectrum(fname):
 	# has header, plus 4 comma-separated columns of freq, real, im, amplitude
-	data_array = numpy.genfromtxt(fname,delimiter=',',dtype='f',skip_header=1)
+	data_array = genfromtxt(fname,delimiter=',',dtype='f',skip_header=1)
 	
 	f = data_array[:,0]
 	A = data_array[:,3]
