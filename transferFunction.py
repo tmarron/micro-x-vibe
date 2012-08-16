@@ -12,20 +12,11 @@ import multiprocessing as multi
 
 def readSpectrum(fname):
 	# has header, plus 4 comma-separated columns of freq, real, im, amplitude
-	f = []
-	A = []
+	data_array = numpy.genfromtxt(fname,delimiter=',',dtype='f',skip_header=1)
 	
-	fp = open(fname)
-	lines = fp.readlines()
-	fp.close()
-	lines = lines[1:]	# header
-	for l in lines:
-		entries = l.strip().split(',')
-		f.append(double(entries[0]))
-		A.append(double(entries[3]))
-
-	f = array(f)
-	A = array(A)
+	f = data_array[:,0]
+	A = data_array[:,3]
+	
 	return f, A
 
 def makeTransfer(inputSpectrum, outputSpectrum):
