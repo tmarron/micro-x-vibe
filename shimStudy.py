@@ -94,6 +94,41 @@ def makeXferSummary():
 	plotXferAB(7,8,16,17, 'XFER fea/insert X', pp, ['with shims','without'])
 	pp.close()
 
+def plotThree(fname1, fname2, fname3, titleStr, pdf, legendNames):
+	freq, amp1 = readSpectrum(fname1)
+	freq, amp2 = readSpectrum(fname2)
+	freq, amp3 = readSpectrum(fname3)
+	semilogx(freq, amp1, 'k')
+	semilogx(freq, amp2, 'b')
+	semilogx(freq, amp3, 'g')
+	xlim(10, 600)
+	legend(legendNames, loc=2)
+	title(titleStr)
+	ylabel('amplitude [arb]')
+	grid(which = 'both', axis='x')
+
+	if pdf is not None:
+		pdf.savefig()
+		clf()
+	else:
+		show()
+	
+
+def makeBigfootUFOcomparison():
+	bigfootRoot = 'vibe_plots/8-16-2012/'
+	UFOroot = 'vibe_plots/7-31-2012/'
+	legendNames = ['bigfoot with shims','bigfoot without', 'bungee UFO']
+
+	pp = PdfPages(rootdir+'bigfoot-ufo.pdf')
+	plotThree(bigfootRoot+'3.txt', bigfootRoot+'12.txt', UFOroot+'9.txt',
+		'XFER fea/insert Z', pp, legendNames)
+	plotThree(bigfootRoot+'6.txt', bigfootRoot+'15.txt', UFOroot+'8.txt',
+		'XFER fea/insert Y', pp, legendNames)
+	plotThree(bigfootRoot+'9.txt', bigfootRoot+'18.txt', UFOroot+'7.txt',
+		'XFER fea/insert X', pp, legendNames)
+	pp.close()
+
 if __name__ == '__main__':
 	makeWithWithoutSummary()
 	makeXferSummary()
+	makeBigfootUFOcomparison()
