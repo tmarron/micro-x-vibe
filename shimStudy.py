@@ -56,8 +56,7 @@ def plotXferAB(fnumAin, fnumAout, fnumBin, fnumBout, titleStr='',pdf=None,legend
 	ampB = sqrt(ampBout/ampBin)
 	plotTwo(freq, ampA, ampB, titleStr, pdf, legendNames)
 	
-
-if __name__ == '__main__':
+def makeWithWithoutSummary():
 	# with and without shims:
 	pp = PdfPages(rootdir+'withwithout.pdf')
 	plotAB(1,10,'Insert Z',pp,['with shims', 'without'])
@@ -71,18 +70,30 @@ if __name__ == '__main__':
 	plotAB(9,18,'FEA/Insert X',pp,['with shims', 'without'])
 	pp.close()
 
+def makeXferSummary():
 	# transfer functions:
 	pp = PdfPages(rootdir+'xfer.pdf')
 	#	lid/skin
 	plotXferAB(28,29,19,20, 'XFER lid/skin Z', pp, ['with shims','without'])
 	plotXferAB(25,26,22,23, 'XFER lid/skin Y', pp, ['with shims','without'])
 	#	insert/skin
+	plotXferAB(28,1,29,10, 'XFER insert/skin Z', pp, ['with shims','without'])
+	plotXferAB(25,4,22,13, 'XFER insert/skin Y', pp, ['with shims','without'])
 	#	fea/skin
+	plotXferAB(28,2,29,11, 'XFER fea/skin Z', pp, ['with shims','without'])
+	plotXferAB(25,5,22,14, 'XFER fea/skin Y', pp, ['with shims','without'])
 	#	insert/lid
+	plotXferAB(29,1,20,10, 'XFER insert/lid Z', pp, ['with shims','without'])
+	plotXferAB(26,4,23,13, 'XFER insert/lid Y', pp, ['with shims','without'])
 	#	fea/lid
+	plotXferAB(29,2,20,11, 'XFER fea/lid Z', pp, ['with shims','without'])
+	plotXferAB(26,5,23,14, 'XFER fea/lid Y', pp, ['with shims','without'])
 	#	fea/insert
 	plotXferAB(1,2,10,11, 'XFER fea/insert Z', pp, ['with shims','without'])
 	plotXferAB(4,5,13,14, 'XFER fea/insert Y', pp, ['with shims','without'])
 	plotXferAB(7,8,16,17, 'XFER fea/insert X', pp, ['with shims','without'])
 	pp.close()
 
+if __name__ == '__main__':
+	makeWithWithoutSummary()
+	makeXferSummary()
