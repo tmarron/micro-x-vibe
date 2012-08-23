@@ -109,8 +109,9 @@ def verify_communication():
 
 
 
-
-#=======================================TRACE CLASS
+#==============================================================================		
+#=======================================DATA CLASS
+#==============================================================================		
 class data():
 
 
@@ -208,9 +209,11 @@ class data():
 	def create_frequency_array(self):
 		#Create frequency array
 		if (self.log == 1):
-			self.xdata = self.start_freq * np.power(10,self.delta_freq * np.arange(self.num_data_points))
+			xdata = self.start_freq * np.power(10,self.delta_freq * np.arange(self.num_data_points))
 		else:
-			self.xdata = self.start_freq + self.delta_freq * np.arange(self.num_data_points)
+			xdata = self.start_freq + self.delta_freq * np.arange(self.num_data_points)
+			
+		self.xdata = np.array(xdata)
 	#==============================================================================		
 
 
@@ -226,11 +229,13 @@ class data():
 		
 		#Convert to magnitude
 		self.complex_values = []
-		self.ydata = []
+		ydata = []
 		for k in range(len(self.real)):
 			#print k
 			self.complex_values.append(complex(self.real[k],self.imaginary[k]))
-			self.ydata.append(abs(complex(self.real[k],self.imaginary[k])))
+			ydata.append(abs(complex(self.real[k],self.imaginary[k])))
+			
+		self.ydata = np.array(ydata)
 	#==============================================================================		
 
 
@@ -260,7 +265,10 @@ class data():
 
 
 
-#=======================================CREATE THE GUI
+
+#==============================================================================		
+#=======================================GUI WINDOW CLASS
+#==============================================================================		
 class GUI_window(QtGui.QMainWindow):
 	#First input = QtGui.QMainWindow ?
         
@@ -282,7 +290,7 @@ class GUI_window(QtGui.QMainWindow):
 		self.axes = self.fig.add_subplot(111)
 		
 		#Want the axes cleared every time plot() is called
-		self.axes.hold(False)
+		#self.axes.hold(False)
 	
 		#Take care of all the plotting
 		self.plt = self.axes.plot(active_trace.xdata,active_trace.ydata)
@@ -290,7 +298,8 @@ class GUI_window(QtGui.QMainWindow):
 		self.axes.set_xlim(min(active_trace.xdata),max(active_trace.xdata))
 		self.axes.grid(True, 'both')
 		self.canvas = FigureCanvas(self.fig)
-	
+		self.canvas.setParent(self.main_widget)
+		
 		#Define the toolbar	
 		self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_widget)
 			
@@ -300,9 +309,10 @@ class GUI_window(QtGui.QMainWindow):
 		self.vertical_widgets.addWidget(self.canvas)
 		self.vertical_widgets.addWidget(self.mpl_toolbar)
 
+		
 		#Add Buttons
 		self.display_buttons()
-
+		#self.setCentralWidget(self.main_widget)
 		#Show the GUI
 		self.main_widget.show()
 	#==============================================================================		
@@ -322,8 +332,8 @@ class GUI_window(QtGui.QMainWindow):
 		
 		
 		#Save plot button
-		qbtn_addplot = QtGui.QPushButton('Add Plot', self.main_widget)
-		#qbtn_addplot.connect(qbtn_addplot, QtCore.SIGNAL("clicked()"), self.add_plot())
+		qbtn_addplot = QtGui.QPushButton('Over Plot', self.main_widget)
+		#qbtn_addplot.connect(qbtn_addplot, QtCore.SIGNAL("clicked()"), self.oplot())
 		qbtn_addplot.clicked.connect(self.add_plot)
 		qbtn_addplot.resize(qbtn_addplot.sizeHint())
 		qbtn_addplot.move(700, 100)  		
@@ -333,20 +343,9 @@ class GUI_window(QtGui.QMainWindow):
 	
 	
 	#=======================================ADD NEW PLOTS
-	def add_plot(self):
-		self.fig2 = Figure()
-        
-		#add subplot
-		self.axes2 = self.fig2.add_subplot(111)
-		
-		#Want the axes cleared every time plot() is called
-		self.axes2.hold(False)
-	
-		#Take care of all the plotting
-		self.plt2 = self.axes2.plot([1,2,3,4])
-		self.canvas2 = FigureCanvas(self.fig2)
-		
-		self.vertical_widgets.addWidget(self.canvas2)
+	def oplot(self):
+		self.axes.plot(active_trace.xdata,active_trace.ydata/2.)
+		self.canvas.draw()
 	#==============================================================================		
 	
 		
@@ -395,23 +394,14 @@ if __name__ == "__main__":
 # 		print "Version = " + version
 	
 	
-		trace = read_active_trace()
+		active_trace = data(sys.argv[1])
+		
 		#Return control to the DSA
 		gpib_write("++mode 0")
 	else:
-		#trace = load_rawfile(sys.argv[1])
 		active_trace = data(sys.argv[1])
 		
-	#active_trace = trace(sys.argv[1])
 	
-	
-
-	# rawfilename = "gpibtest-raw.txt"
-# 	save_rawfile(trace, rawfilename)
-# 	rawfilename = "gpibtest-justdata.txt"	
-# 	save_rawfile(data, rawfilename)
-
-
 	app = QtGui.QApplication(sys.argv)
     	w = GUI_window(active_trace)
     	#w.plot_data(freq,magnitude,'log')
