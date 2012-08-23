@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import sys
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 #==============================================================================
 
 
@@ -111,6 +111,7 @@ def verify_communication():
 def read_active_trace():
 	gpib_write("DDAS")
 	trace = gpib_read()
+	print "Read data from Device"
 	return trace
 #==============================================================================		
 
@@ -130,7 +131,6 @@ def extract_header_data(trace, verbose):
 		print "Data:"
 		print data
 	
-	print "Read data from Device"
 	return [header,data]
 #==============================================================================		
 
@@ -163,23 +163,78 @@ def load_rawfile(rawfilename):
 
 
 
+
+
+
+#=======================================CREATE THE MATPLOTLIB PLOT
+class plot_window(FigureCanvas):
+    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
+    #def __init__(self, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, xdata, ydata, log):
+    	self.xdata = xdata
+	self.ydata = ydata
+    	#Setup the matplotlib figure
+        #fig = Figure(figsize=(width, height), dpi=dpi)
+        fig = Figure()
+        
+        #add subplot
+        self.axes = fig.add_subplot(111)
+        
+        #Want the axes cleared every time plot() is called
+        self.axes.hold(False)
+
+	self.data = [1,2,3,4]
+	self.axes.plot(self.xdata,self.ydata)
+	self.axes.set_xscale(log)
+	self.axes.set_xlim(min(self.xdata),max(self.xdata))
+	self.axes.grid(True, 'both')
+	#self.axes.plot(self.data)
+        
+        FigureCanvas.__init__(self, fig)
+        #self.setParent(parent)
+#==============================================================================		
+
+
+
+
+
+
+
+
 #=======================================CREATE THE GUI
-class Example(FigureCanvas):
-
+class GUI_window(QtGui.QMainWindow):
+	#First input = QtGui.QMainWindow ?
         
-	def __init__(self):
+	def __init__(self,xdata, ydata, log):
         
-		self.fig = Figure()
-		self.ax = self.fig.add_subplot(111)
-		FigureCanvas.__init__(self, self.fig)
-
-	def plot_data(self, xdata, ydata, log):	
+		#self.fig = Figure()
+		#self.ax = self.fig.add_subplot(111)
+		#FigureCanvas.__init__(self, self.fig)
+		
 		self.xdata = xdata
 		self.ydata = ydata
+		self.log = log	
+		self.widget = QtGui.QWidget()
+		self.widget.resize(800, 600)
+		self.widget.move(300, 300)
+		self.widget.setWindowTitle('HP3562A GUI')
+		
+		vertical_widgets = QtGui.QVBoxLayout(self.widget)
+		
+		pw = plot_window(xdata,ydata,log)
+		
+		vertical_widgets.addWidget(pw)
+		
+		self.widget.show()
+
+
+	def plot_data(self):	
 		# draw the canvas
-		self.fig.canvas.draw()
+		fig = Figure()
+		#self.fig.canvas.draw()
+		self.ax = fig.add_subplot(111)
 		self.ax.plot(self.xdata,self.ydata)
-		self.ax.set_xscale(log)
+		self.ax.set_xscale('log')
 		self.ax.set_xlim(min(self.xdata),max(self.xdata))
 		self.ax.grid(True, 'both')
 		# start the timer
@@ -187,9 +242,9 @@ class Example(FigureCanvas):
 		#self.show()        
 #==============================================================================		
         
-
-
-
+        
+        
+        
 
 #=======================================MAIN PROGRAM		
 if __name__ == "__main__":
@@ -226,6 +281,8 @@ if __name__ == "__main__":
 	
 	
 		trace = read_active_trace()
+		#Return control to the DSA
+		gpib_write("++mode 0")
 	else:
 		trace = load_rawfile(sys.argv[1])
 	
@@ -278,21 +335,10 @@ if __name__ == "__main__":
 		magnitude.append(abs(complex(real[k],imaginary[k])))
 	
 
-
-
-
 	app = QtGui.QApplication(sys.argv)
-    	w = Example()
-    	w.plot_data(freq,magnitude,'log')
-    	w.setWindowTitle("Current Trace")
- 	w.show()
+    	w = GUI_window(freq,magnitude,'log')
+    	#w.plot_data(freq,magnitude,'log')
+    	#w.setWindowTitle("Current Trace")
+ 	#w.show()
 	sys.exit(app.exec_())
-
-	#Plot the trace
-	#plt.figure()
-	#plt.plot(freq,magnitude)	
-	#plt.ylim(0,1)
-	#plt.show()
-
-	#Return control to the DSA
-	gpib_write("++mode 0")
+	
