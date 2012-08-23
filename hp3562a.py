@@ -108,93 +108,149 @@ def verify_communication():
 
 
 
-#=======================================READ THE ACTIVE TRACE
-def read_active_trace():
-	gpib_write("DDAS")
-	trace = gpib_read()
-	print "Read data from Device"
-	return trace
-#==============================================================================		
 
 
+#=======================================TRACE CLASS
+class data():
 
 
-
-#=======================================EXTRACT THE HEADER AND DATA FROM THE TRACE
-def extract_header_data(trace, verbose):
-	header = trace[0:67]
-	data = trace[67:]
-	if (verbose == True):
-		print "Header:"
-		for k, lines in enumerate(header):
-			print k, lines
-			
-		print "Data:"
-		print data
-	
-	return [header,data]
-#==============================================================================		
-
-
-
-
-
-#=======================================SAVE THE RAWFILE
-def save_rawfile(trace, rawfilename):
-	rawfile = open(rawfilename,"w")
-	for datapoint in trace:
-		rawfile.write(str(datapoint)+"\n")
-	rawfile.close()
-#==============================================================================		
-
-
-
-
-#=======================================LOAD THE RAWFILE
-def load_rawfile(rawfilename):
-	rawfile = open(rawfilename,"r")
-	trace = rawfile.readlines()
-	rawfile.close()
-	trace = [lines.replace('\n', '') for lines in trace]
-	print "Successfully read data from: " + rawfilename
-	return trace
-#==============================================================================	
-
-
-
-
-
-
-
-
-#=======================================CREATE THE MATPLOTLIB PLOT
-class plot_window(FigureCanvas):
-    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
-    #def __init__(self, parent=None, width=5, height=4, dpi=100):
-    def __init__(self, main_widget, xdata, ydata, log):
-    	self.xdata = xdata
-	self.ydata = ydata
-    	#Setup the matplotlib figure
-        #fig = Figure(figsize=(width, height), dpi=dpi)
-        self.fig = Figure()
-        
-        #add subplot
-        self.axes = self.fig.add_subplot(111)
-        
-        #Want the axes cleared every time plot() is called
-        self.axes.hold(False)
-
-	self.axes.plot(self.xdata,self.ydata)
-	self.axes.set_xscale(log)
-	self.axes.set_xlim(min(self.xdata),max(self.xdata))
-	self.axes.grid(True, 'both')
-        #self.fig.savefig('figuresave_test.pdf',format='pdf')
-
-	
+	#=======================================INITIALIZE
+	def __init__(self, filename):
 		
-		        
-        FigureCanvas.__init__(self, self.fig)
-        #self.setParent(parent)
+		#Obtain the data. Either read it from the GPIB or from a file
+		if (filename==""):
+			self.transfer = self.read_active_trace()
+		else:
+			self.transfer = self.load_rawfile(filename)
+		
+		#Extract the header and the actual trace	
+		self.extract_header_data(False)
+		
+		#Create the frequency array
+		self.create_frequency_array()
+		
+		#Convert the data
+		self.convert_data()
+		
+	#==============================================================================		
+
+
+
+				
+
+	#=======================================READ THE ACTIVE TRACE
+	def read_active_trace(self):
+		gpib_write("DDAS")
+		trace = gpib_read()
+		print "Read data from Device"
+		return trace
+	#==============================================================================		
+
+
+
+
+
+	#=======================================LOAD THE RAWFILE
+	def load_rawfile(self,rawfilename):
+		rawfile = open(rawfilename,"r")
+		trace = rawfile.readlines()
+		rawfile.close()
+		trace = [lines.replace('\n', '') for lines in trace]
+		print "Successfully read data from: " + rawfilename
+		return trace
+	#==============================================================================	
+
+
+
+
+
+	#=======================================EXTRACT THE HEADER AND DATA FROM THE TRACE
+	def extract_header_data(self,verbose):
+		#start_freq = 65
+		#delta x = 56
+		#log/linear data = 41
+		#complex/real = 37
+		#x-axis units = 11
+		#y-axis units (amplitude) = 10
+		#Volts peak/rms = 9
+		
+		
+		
+		self.header = self.transfer[0:67]
+		self.data = self.transfer[67:]
+		if (verbose == True):
+			print "Header:"
+			for k, lines in enumerate(self.header):
+				print k, lines
+				
+			print "Data:"
+			print self.data
+			
+		#Extract relevant header information
+		self.num_data_points = int(float(self.header[2]))
+		self.start_freq = float(self.header[65])
+		self.delta_freq = float(self.header[56])
+	
+		#For X-axis log = 1, linear = 0
+		log = int(float(self.header[41]))
+		if (log==1):
+			self.log = "log"
+		else:
+			self.log = "linear"
+		
+	#==============================================================================		
+
+
+
+
+
+	#=======================================CREATE FREQUENCY ARRAY
+	def create_frequency_array(self):
+		#Create frequency array
+		if (self.log == 1):
+			self.xdata = self.start_freq * np.power(10,self.delta_freq * np.arange(self.num_data_points))
+		else:
+			self.xdata = self.start_freq + self.delta_freq * np.arange(self.num_data_points)
+	#==============================================================================		
+
+
+
+
+
+
+	#=======================================CONVERT DATA
+	def convert_data(self):
+		#Separate the real and imaginary components
+		self.real = map(float,self.data[::2])
+		self.imaginary = map(float,self.data[1::2])
+		
+		#Convert to magnitude
+		self.complex_values = []
+		self.ydata = []
+		for k in range(len(self.real)):
+			#print k
+			self.complex_values.append(complex(self.real[k],self.imaginary[k]))
+			self.ydata.append(abs(complex(self.real[k],self.imaginary[k])))
+	#==============================================================================		
+
+
+
+
+
+	#=======================================SAVE THE RAWFILE
+	def save_rawfile(self, rawfilename):
+		rawfile = open(rawfilename,"w")
+		for datapoint in trace:
+			rawfile.write(str(datapoint)+"\n")
+		rawfile.close()
+	#==============================================================================		
+
+
+
+
+
+#==============================================================================		
+#==============================================================================		
 #==============================================================================		
 
 
@@ -208,18 +264,16 @@ class plot_window(FigureCanvas):
 class GUI_window(QtGui.QMainWindow):
 	#First input = QtGui.QMainWindow ?
         
-	def __init__(self,xdata, ydata, log):
+        
+        
+        #=======================================INITIALIZE MAIN GUI WIDGET
+	def __init__(self,active_trace):
    		
    		#Create the Main Widget
    		self.main_widget = QtGui.QWidget()
 		self.main_widget.resize(800, 600)
 		self.main_widget.move(300, 300)
 		self.main_widget.setWindowTitle('HP3562A GUI')     
-		
-		#Assign all the data values
-		self.xdata = xdata
-		self.ydata = ydata
-		self.log = log	
 		
 		#Make the figure
 		self.fig = Figure()
@@ -231,9 +285,9 @@ class GUI_window(QtGui.QMainWindow):
 		self.axes.hold(False)
 	
 		#Take care of all the plotting
-		self.plt = self.axes.plot(self.xdata,self.ydata)
-		self.axes.set_xscale(log)
-		self.axes.set_xlim(min(self.xdata),max(self.xdata))
+		self.plt = self.axes.plot(active_trace.xdata,active_trace.ydata)
+		self.axes.set_xscale(active_trace.log)
+		self.axes.set_xlim(min(active_trace.xdata),max(active_trace.xdata))
 		self.axes.grid(True, 'both')
 		self.canvas = FigureCanvas(self.fig)
 	
@@ -241,18 +295,22 @@ class GUI_window(QtGui.QMainWindow):
 		self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_widget)
 			
 		#Want the plots to be in a nice vertical line
-		vertical_widgets = QtGui.QVBoxLayout(self.main_widget)
+		self.vertical_widgets = QtGui.QVBoxLayout(self.main_widget)
 		
-		vertical_widgets.addWidget(self.canvas)
-		vertical_widgets.addWidget(self.mpl_toolbar)
+		self.vertical_widgets.addWidget(self.canvas)
+		self.vertical_widgets.addWidget(self.mpl_toolbar)
 
 		#Add Buttons
 		self.display_buttons()
 
 		#Show the GUI
 		self.main_widget.show()
+	#==============================================================================		
 
 
+
+
+	#=======================================DISPLAY BUTTONS
 	def display_buttons(self):
 	
 		#Quit Button
@@ -264,10 +322,39 @@ class GUI_window(QtGui.QMainWindow):
 		
 		
 		#Save plot button
-		#qbtn_save = QtGui.QPushButton('Save Plot', self.widget)
-		#qbtn_save.clicked.connect()
-		#qbtn_save.resize(qbtn_save.sizeHint())
-		#qbtn_save.move(700, 100)  		
+		qbtn_addplot = QtGui.QPushButton('Add Plot', self.main_widget)
+		#qbtn_addplot.connect(qbtn_addplot, QtCore.SIGNAL("clicked()"), self.add_plot())
+		qbtn_addplot.clicked.connect(self.add_plot)
+		qbtn_addplot.resize(qbtn_addplot.sizeHint())
+		qbtn_addplot.move(700, 100)  		
+	#==============================================================================		
+
+
+	
+	
+	#=======================================ADD NEW PLOTS
+	def add_plot(self):
+		self.fig2 = Figure()
+        
+		#add subplot
+		self.axes2 = self.fig2.add_subplot(111)
+		
+		#Want the axes cleared every time plot() is called
+		self.axes2.hold(False)
+	
+		#Take care of all the plotting
+		self.plt2 = self.axes2.plot([1,2,3,4])
+		self.canvas2 = FigureCanvas(self.fig2)
+		
+		self.vertical_widgets.addWidget(self.canvas2)
+	#==============================================================================		
+	
+		
+		
+		
+		
+#==============================================================================		
+#==============================================================================		
 #==============================================================================		
         
         
@@ -312,59 +399,21 @@ if __name__ == "__main__":
 		#Return control to the DSA
 		gpib_write("++mode 0")
 	else:
-		trace = load_rawfile(sys.argv[1])
-	
+		#trace = load_rawfile(sys.argv[1])
+		active_trace = data(sys.argv[1])
 		
-		
-	[header,data] = extract_header_data(trace, False)
+	#active_trace = trace(sys.argv[1])
 	
-	rawfilename = "gpibtest-raw.txt"
-	save_rawfile(trace, rawfilename)
-	rawfilename = "gpibtest-justdata.txt"	
-	save_rawfile(data, rawfilename)
 	
-		
-	
-	#print data
-	real = map(float,data[::2])
-	imaginary = map(float,data[1::2])
 
+	# rawfilename = "gpibtest-raw.txt"
+# 	save_rawfile(trace, rawfilename)
+# 	rawfilename = "gpibtest-justdata.txt"	
+# 	save_rawfile(data, rawfilename)
 
-	#start_freq = 65
-	#delta x = 56
-	#log/linear data = 41
-	#complex/real = 37
-	#x-axis units = 11
-	#y-axis units (amplitude) = 10
-	#Volts peak/rms = 9
-
-
-	#Extract relevant header information
-	num_data_points = int(float(header[2]))
-	start_freq = float(header[65])
-	delta_freq = float(header[56])
-
-	#For X-axis log = 1, linear = 0
-	log = int(float(header[41]))
-
-	#Create frequency array
-	if (log == 1):
-		freq = start_freq * np.power(10,delta_freq * np.arange(num_data_points))
-	else:
-		freq = start_freq + delta_freq * np.arange(num_data_points)
-
-
-	#Convert to magnitude
-	complex_values = []
-	magnitude = []
-	for k in range(len(real)):
-		#print k
-		complex_values.append(complex(real[k],imaginary[k]))
-		magnitude.append(abs(complex(real[k],imaginary[k])))
-	
 
 	app = QtGui.QApplication(sys.argv)
-    	w = GUI_window(freq,magnitude,'log')
+    	w = GUI_window(active_trace)
     	#w.plot_data(freq,magnitude,'log')
     	#w.setWindowTitle("Current Trace")
  	#w.show()
