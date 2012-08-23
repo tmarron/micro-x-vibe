@@ -275,8 +275,8 @@ class GUI_window(QtGui.QMainWindow):
         
         
         #=======================================INITIALIZE MAIN GUI WIDGET
-	def __init__(self,active_trace):
-   		
+	def __init__(self,active_trace,parent=None):
+   		super(GUI_window, self).__init__(parent)
    		#Create the Main Widget
    		self.main_widget = QtGui.QWidget()
 		self.main_widget.resize(800, 600)
@@ -334,7 +334,7 @@ class GUI_window(QtGui.QMainWindow):
 		#Save plot button
 		qbtn_addplot = QtGui.QPushButton('Over Plot', self.main_widget)
 		#qbtn_addplot.connect(qbtn_addplot, QtCore.SIGNAL("clicked()"), self.oplot())
-		qbtn_addplot.clicked.connect(self.add_plot)
+		qbtn_addplot.clicked.connect(self.oplot)
 		qbtn_addplot.resize(qbtn_addplot.sizeHint())
 		qbtn_addplot.move(700, 100)  		
 	#==============================================================================		
@@ -344,7 +344,14 @@ class GUI_window(QtGui.QMainWindow):
 	
 	#=======================================ADD NEW PLOTS
 	def oplot(self):
-		self.axes.plot(active_trace.xdata,active_trace.ydata/2.)
+	    	filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
+        
+        	if filename:
+        		
+        		new_trace = data(filename)
+	
+	
+		self.axes.plot(new_trace.xdata,new_trace.ydata)
 		self.canvas.draw()
 	#==============================================================================		
 	
