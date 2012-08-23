@@ -171,15 +171,15 @@ def load_rawfile(rawfilename):
 class plot_window(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
     #def __init__(self, parent=None, width=5, height=4, dpi=100):
-    def __init__(self, xdata, ydata, log):
+    def __init__(self, main_widget, xdata, ydata, log):
     	self.xdata = xdata
 	self.ydata = ydata
     	#Setup the matplotlib figure
         #fig = Figure(figsize=(width, height), dpi=dpi)
-        fig = Figure()
+        self.fig = Figure()
         
         #add subplot
-        self.axes = fig.add_subplot(111)
+        self.axes = self.fig.add_subplot(111)
         
         #Want the axes cleared every time plot() is called
         self.axes.hold(False)
@@ -188,10 +188,12 @@ class plot_window(FigureCanvas):
 	self.axes.set_xscale(log)
 	self.axes.set_xlim(min(self.xdata),max(self.xdata))
 	self.axes.grid(True, 'both')
-	#self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
+        #self.fig.savefig('figuresave_test.pdf',format='pdf')
 
-        
-        FigureCanvas.__init__(self, fig)
+	
+		
+		        
+        FigureCanvas.__init__(self, self.fig)
         #self.setParent(parent)
 #==============================================================================		
 
@@ -207,48 +209,65 @@ class GUI_window(QtGui.QMainWindow):
 	#First input = QtGui.QMainWindow ?
         
 	def __init__(self,xdata, ydata, log):
-        
-		#self.fig = Figure()
-		#self.ax = self.fig.add_subplot(111)
-		#FigureCanvas.__init__(self, self.fig)
+   		
+   		#Create the Main Widget
+   		self.main_widget = QtGui.QWidget()
+		self.main_widget.resize(800, 600)
+		self.main_widget.move(300, 300)
+		self.main_widget.setWindowTitle('HP3562A GUI')     
 		
+		#Assign all the data values
 		self.xdata = xdata
 		self.ydata = ydata
 		self.log = log	
-		self.widget = QtGui.QWidget()
-		self.widget.resize(800, 600)
-		self.widget.move(300, 300)
-		self.widget.setWindowTitle('HP3562A GUI')
 		
-		vertical_widgets = QtGui.QVBoxLayout(self.widget)
+		#Make the figure
+		self.fig = Figure()
+        
+		#add subplot
+		self.axes = self.fig.add_subplot(111)
 		
-		pw = plot_window(xdata,ydata,log)
-		pw2 = plot_window(xdata,ydata,log)
-		vertical_widgets.addWidget(pw)
-		#vertical_widgets.addWidget(pw2)
+		#Want the axes cleared every time plot() is called
+		self.axes.hold(False)
+	
+		#Take care of all the plotting
+		self.plt = self.axes.plot(self.xdata,self.ydata)
+		self.axes.set_xscale(log)
+		self.axes.set_xlim(min(self.xdata),max(self.xdata))
+		self.axes.grid(True, 'both')
+		self.canvas = FigureCanvas(self.fig)
+	
+		#Define the toolbar	
+		self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_widget)
+			
+		#Want the plots to be in a nice vertical line
+		vertical_widgets = QtGui.QVBoxLayout(self.main_widget)
 		
-		
-		qbtn_quit = QtGui.QPushButton('Quit', self.widget)
-		qbtn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
+		vertical_widgets.addWidget(self.canvas)
+		vertical_widgets.addWidget(self.mpl_toolbar)
+
+		#Add Buttons
+		self.display_buttons()
+
+		#Show the GUI
+		self.main_widget.show()
+
+
+	def display_buttons(self):
+	
+		#Quit Button
+		qbtn_quit = QtGui.QPushButton('Quit', self.main_widget)
+		#qbtn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
+		qbtn_quit.connect(qbtn_quit, QtCore.SIGNAL("clicked()"), app, QtCore.SLOT("quit()"))
 		qbtn_quit.resize(qbtn_quit.sizeHint())
-		qbtn_quit.move(700, 50) 
-        
-        
-		self.widget.show()
-
-
-	def plot_data(self):	
-		# draw the canvas
-		fig = Figure()
-		#self.fig.canvas.draw()
-		self.ax = fig.add_subplot(111)
-		self.ax.plot(self.xdata,self.ydata)
-		self.ax.set_xscale('log')
-		self.ax.set_xlim(min(self.xdata),max(self.xdata))
-		self.ax.grid(True, 'both')
-		# start the timer
-		#self.timer = self.startTimer(1000)   
-		#self.show()        
+		qbtn_quit.move(700, 50)  
+		
+		
+		#Save plot button
+		#qbtn_save = QtGui.QPushButton('Save Plot', self.widget)
+		#qbtn_save.clicked.connect()
+		#qbtn_save.resize(qbtn_save.sizeHint())
+		#qbtn_save.move(700, 100)  		
 #==============================================================================		
         
         
