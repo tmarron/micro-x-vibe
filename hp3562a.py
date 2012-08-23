@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 import sys
 from PyQt4 import QtGui, QtCore
 #==============================================================================
@@ -183,12 +184,12 @@ class plot_window(FigureCanvas):
         #Want the axes cleared every time plot() is called
         self.axes.hold(False)
 
-	self.data = [1,2,3,4]
 	self.axes.plot(self.xdata,self.ydata)
 	self.axes.set_xscale(log)
 	self.axes.set_xlim(min(self.xdata),max(self.xdata))
 	self.axes.grid(True, 'both')
-	#self.axes.plot(self.data)
+	#self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_frame)
+
         
         FigureCanvas.__init__(self, fig)
         #self.setParent(parent)
@@ -222,9 +223,17 @@ class GUI_window(QtGui.QMainWindow):
 		vertical_widgets = QtGui.QVBoxLayout(self.widget)
 		
 		pw = plot_window(xdata,ydata,log)
-		
+		pw2 = plot_window(xdata,ydata,log)
 		vertical_widgets.addWidget(pw)
+		#vertical_widgets.addWidget(pw2)
 		
+		
+		qbtn_quit = QtGui.QPushButton('Quit', self.widget)
+		qbtn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
+		qbtn_quit.resize(qbtn_quit.sizeHint())
+		qbtn_quit.move(700, 50) 
+        
+        
 		self.widget.show()
 
 
