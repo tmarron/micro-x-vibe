@@ -19,9 +19,9 @@ from PyQt4 import QtGui, QtCore
 class Gpib():
     """GPIB Class"""
     
-	#=======================================INITIATE THE GPIB CONTROLLER
 	def __init__(self,addr, port):
-
+        """Initiate the GPIB controller"""
+        
 		self.ser = serial.Serial(port,rtscts=0,timeout=1)
 
 		#Set controller to command mode
@@ -44,11 +44,6 @@ class Gpib():
 
 		#Clear the device buffer
 		self.gpib_clear_device()
-	#==============================================================================
-
-
-
-
 
 	#=======================================READ FROM THE DEVICE
 	def gpib_read(self):
