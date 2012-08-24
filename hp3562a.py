@@ -127,12 +127,12 @@ class data():
 		#Extract the header and the actual trace	
 		self.extract_header_data(False)
 		
-		#Create the frequency array
-		self.create_frequency_array()
-		
+	
 		#Convert the data
 		self.convert_data()
-		
+
+		#Create the frequency array
+		self.create_frequency_array()		
 	#==============================================================================		
 
 
@@ -191,7 +191,8 @@ class data():
 		self.num_data_points = int(float(self.header[2]))
 		self.start_freq = float(self.header[65])
 		self.delta_freq = float(self.header[56])
-	
+		self.complex_format = int(float(self.header[37]))
+		
 		#For X-axis log = 1, linear = 0
 		log = int(float(self.header[41]))
 		if (log==1):
@@ -208,6 +209,7 @@ class data():
 	#=======================================CREATE FREQUENCY ARRAY
 	def create_frequency_array(self):
 		#Create frequency array
+
 		if (self.log == 1):
 			xdata = self.start_freq * np.power(10,self.delta_freq * np.arange(self.num_data_points))
 		else:
@@ -224,13 +226,19 @@ class data():
 	#=======================================CONVERT DATA
 	def convert_data(self):
 		#Separate the real and imaginary components
-		self.real = map(float,self.data[::2])
-		self.imaginary = map(float,self.data[1::2])
-		
+		if (self.complex_format == 1):
+			self.real = map(float,self.data[::2])
+			self.imaginary = map(float,self.data[1::2])
+		else:
+			self.real = map(float,self.data)
+			self.imaginary = map(float,self.data)	
+			
+			
 		#Convert to magnitude
 		self.complex_values = []
 		ydata = []
-		for k in range(len(self.real)):
+		
+		for k in range(self.num_data_points):
 			#print k
 			self.complex_values.append(complex(self.real[k],self.imaginary[k]))
 			ydata.append(abs(complex(self.real[k],self.imaginary[k])))
@@ -275,7 +283,7 @@ class GUI_window(QtGui.QMainWindow):
         
         
         #=======================================INITIALIZE MAIN GUI WIDGET
-	def __init__(self,active_trace,parent=None):
+	def __init__(self,trace,parent=None):
    		super(GUI_window, self).__init__(parent)
    		#Create the Main Widget
    		self.main_widget = QtGui.QWidget()
@@ -293,25 +301,41 @@ class GUI_window(QtGui.QMainWindow):
 		#self.axes.hold(False)
 	
 		#Take care of all the plotting
-		self.plt = self.axes.plot(active_trace.xdata,active_trace.ydata)
-		self.axes.set_xscale(active_trace.log)
-		self.axes.set_xlim(min(active_trace.xdata),max(active_trace.xdata))
+		self.plt = self.axes.plot(trace.xdata,trace.ydata)
+		self.axes.set_xscale(trace.log)
+		self.axes.set_xlim(min(trace.xdata),max(trace.xdata))
 		self.axes.grid(True, 'both')
 		self.canvas = FigureCanvas(self.fig)
 		self.canvas.setParent(self.main_widget)
 		
 		#Define the toolbar	
 		self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_widget)
+		
+	
 			
-		#Want the plots to be in a nice vertical line
-		self.vertical_widgets = QtGui.QVBoxLayout(self.main_widget)
-		
-		self.vertical_widgets.addWidget(self.canvas)
-		self.vertical_widgets.addWidget(self.mpl_toolbar)
+		#Want the plots to be in a nice vertical line on the left
+		self.left_box = QtGui.QVBoxLayout()
+		self.left_box.addWidget(self.canvas)
+		self.left_box.addWidget(self.mpl_toolbar)
 
-		
+
+
 		#Add Buttons
 		self.display_buttons()
+		
+		
+		
+		#Want the plots to be in a nice vertical line on the right
+		self.right_box = QtGui.QVBoxLayout()
+		self.right_box.addWidget(self.qbtn_quit)
+		self.right_box.addWidget(self.qbtn_oplot)
+		
+		self.main_layout = QtGui.QHBoxLayout(self.main_widget)
+		self.main_layout.addLayout(self.left_box)
+		self.main_layout.addLayout(self.right_box)
+
+		
+
 		#self.setCentralWidget(self.main_widget)
 		#Show the GUI
 		self.main_widget.show()
@@ -324,19 +348,19 @@ class GUI_window(QtGui.QMainWindow):
 	def display_buttons(self):
 	
 		#Quit Button
-		qbtn_quit = QtGui.QPushButton('Quit', self.main_widget)
+		self.qbtn_quit = QtGui.QPushButton('Quit', self.main_widget)
 		#qbtn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
-		qbtn_quit.connect(qbtn_quit, QtCore.SIGNAL("clicked()"), app, QtCore.SLOT("quit()"))
-		qbtn_quit.resize(qbtn_quit.sizeHint())
-		qbtn_quit.move(700, 50)  
+		self.qbtn_quit.connect(self.qbtn_quit, QtCore.SIGNAL("clicked()"), app, QtCore.SLOT("quit()"))
+		#self.qbtn_quit.resize(qbtn_quit.sizeHint())
 		
 		
 		#Save plot button
-		qbtn_addplot = QtGui.QPushButton('Over Plot', self.main_widget)
+		self.qbtn_oplot = QtGui.QPushButton('Over Plot', self.main_widget)
 		#qbtn_addplot.connect(qbtn_addplot, QtCore.SIGNAL("clicked()"), self.oplot())
-		qbtn_addplot.clicked.connect(self.oplot)
-		qbtn_addplot.resize(qbtn_addplot.sizeHint())
-		qbtn_addplot.move(700, 100)  		
+		self.qbtn_oplot.clicked.connect(self.oplot)
+		
+		#qbtn_addplot.resize(qbtn_addplot.sizeHint())
+		#qbtn_addplot.move(700, 100)  		
 	#==============================================================================		
 
 
@@ -344,73 +368,99 @@ class GUI_window(QtGui.QMainWindow):
 	
 	#=======================================ADD NEW PLOTS
 	def oplot(self):
-	    	filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
-        
-        	if filename:
-        		
-        		new_trace = data(filename)
-	
-	
-		self.axes.plot(new_trace.xdata,new_trace.ydata)
+		self.openfile_dialog()
+		self.axes.plot(self.trace.xdata,self.trace.ydata)
 		self.canvas.draw()
 	#==============================================================================		
 	
 		
+	
+	
+	
+	#=======================================OPEN NEW PLOT
+	def openfile_dialog(self):
+	    	filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
+        
+        	if filename:
+        		self.trace = data(filename)
+	#==============================================================================		
+	
+	
 		
+
+			
 		
 		
 #==============================================================================		
 #==============================================================================		
 #==============================================================================		
         
-        
+
+class load_first_file(QtGui.QMainWindow):
+
+	def __init__(self,parent=None):
+   		 super(load_first_file, self).__init__(parent)
+		 self.filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
+
         
         
 
 #=======================================MAIN PROGRAM		
 if __name__ == "__main__":
 
-	if len(sys.argv) == 1:
-		#Baudrate and other stuff doesn't matter
-		ser = serial.Serial('/dev/tty.usbserial-PXG7UUUG',rtscts=0,timeout=1)
-		
-		#Found from the DSA front panel
-		addr=30
-		
-		#Initiate the GPIB converter
-		gpib_init(addr)
-		
-		#Verify that the computer, converter and device are communicating correctly
-		verify_communication()
-	
-	
-	
-		gpib_write("++ver")
-		version = gpib_read()
-		
-		gpib_write("ID?")
-		device_id = gpib_read()
-		
-		gpib_write("RDY?")
-		ready_status = gpib_read()
-	
-		#Print out diagnostic data
-# 		print "Size = " + str(len(data))
-# 		print "ID = " + device_id
-# 		print "Ready? " + ready_status
-# 		print "Version = " + version
-	
-	
-		active_trace = data(sys.argv[1])
-		
-		#Return control to the DSA
-		gpib_write("++mode 0")
-	else:
-		active_trace = data(sys.argv[1])
-		
-	
+
 	app = QtGui.QApplication(sys.argv)
-    	w = GUI_window(active_trace)
+
+
+	if len(sys.argv) == 1:
+		#If no argument is passed then ask the user to pick one	
+		first_file = load_first_file()
+       		first_trace = data(first_file.filename)
+        		
+        else:
+        	if (sys.argv[1] == "gpib"):
+        		#Read from the GPIB Controller
+        	
+			#Baudrate and other stuff doesn't matter
+			ser = serial.Serial('/dev/tty.usbserial-PXG7UUUG',rtscts=0,timeout=1)
+			
+			#Found from the DSA front panel
+			addr=30
+			
+			#Initiate the GPIB converter
+			gpib_init(addr)
+			
+			#Verify that the computer, converter and device are communicating correctly
+			verify_communication()
+		
+		
+		
+			gpib_write("++ver")
+			version = gpib_read()
+			
+			gpib_write("ID?")
+			device_id = gpib_read()
+			
+			gpib_write("RDY?")
+			ready_status = gpib_read()
+		
+			#Print out diagnostic data
+	 		print "Size = " + str(len(data))
+	 		print "ID = " + device_id
+			print "Ready? " + ready_status
+	 		print "Version = " + version
+		
+		
+			first_trace = data(sys.argv[1])
+			
+			#Return control to the DSA
+			gpib_write("++mode 0")
+		else:
+			#Load the indicated filename
+			first_trace = data(sys.argv[1])
+		
+	
+    	w = GUI_window(first_trace)
     	#w.plot_data(freq,magnitude,'log')
     	#w.setWindowTitle("Current Trace")
  	#w.show()
