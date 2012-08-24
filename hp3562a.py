@@ -21,90 +21,104 @@ from PyQt4 import QtGui, QtCore
 
 
 
-#=======================================INITIATE THE GPIB CONTROLLER
-def gpib_init(addr) :
-	#Set controller to command mode
-	ser.write("++mode 1\r")
-	time.sleep(0.1)
-	ser.write("++ifc\r")
-	time.sleep(0.1)
-	#Turn off auto read mode after write
-	ser.write("++auto 0\r")
-	time.sleep(0.1)
-	#Turn on EOI - necessary for this device so it knows when a command has been sent
-	ser.write("++eoi 1\r")
-	time.sleep(0.1)
-	#Set the GPIB address. Currently at 30
-	ser.write("++addr " + str(addr) + "\r")
-	#Clear the device buffer
-	gpib_clear_device()
-#==============================================================================
 
-
-
-
-
-#=======================================READ FROM THE DEVICE       
-def gpib_read():
-	#Tell the converter you want to read data
-        ser.write("++read eoi\r")
-        buffer = []
-        readvalue = "data"
-        #Read until there's nothing left to read
-        while (readvalue != ""):
-		readvalue = ser.readline()
-		buffer.append(readvalue)
-	
-	#Get rid of the \r\n in the strings
-	buffer = [lines.replace('\r\n', '') for lines in buffer]	
-		
-	if (len(buffer[:-1]) == 1):
-		#If the buffer only has 1 element then just return that element instead of a list		
-		return buffer[0]
-	else:
-		#Otherwise return all but the last (empty) element
-		return buffer[:-1]
-#==============================================================================
-
-
-
-
-		
-#=======================================WRITE TO THE DEVICE		
-def gpib_write(gpibstr):
-	#Doesn't really need its own function, but might become more elaborate later
-        ser.write(gpibstr + "\r")
-#==============================================================================
-
-
-
-
-
-
-#=======================================CLEAR THE DEVICE      
-def gpib_clear_device():
-	#Clear the device buffer in case there are leftovers from previous operation
-        ser.write("++read eoi\r")
-	empty_buffer = "full"
-	while (empty_buffer != ""):   
-		empty_buffer = ser.readline()
-#==============================================================================
-
-
-
-
-#=======================================VERIFY COMMUNICATION
-def verify_communication():
-	gpib_write("ID?")
-	device_id = gpib_read()
-	if (device_id == "HP3562A"):
-		print "HP3562A Functioning Properly"
-	else:
-		print "ID = " + device_id
-		print "Bad Data Transfer - Exiting"
-		sys.exit()
 #==============================================================================		
+#=======================================GPIB CLASS
+#==============================================================================		
+class gpib():
 
+	#=======================================INITIATE THE GPIB CONTROLLER
+	def __init__(self,addr, port):
+	
+		self.ser = serial.Serial(port,rtscts=0,timeout=1)
+		
+		#Set controller to command mode
+		self.ser.write("++mode 1\r")
+		time.sleep(0.1)
+		
+		self.ser.write("++ifc\r")
+		time.sleep(0.1)
+		
+		#Turn off auto read mode after write
+		self.ser.write("++auto 0\r")
+		time.sleep(0.1)
+		
+		#Turn on EOI - necessary for this device so it knows when a command has been sent
+		self.ser.write("++eoi 1\r")
+		time.sleep(0.1)
+		
+		#Set the GPIB address. Currently at 30
+		self.ser.write("++addr " + str(addr) + "\r")
+		
+		#Clear the device buffer
+		self.gpib_clear_device()
+	#==============================================================================
+	
+	
+	
+	
+	
+	#=======================================READ FROM THE DEVICE       
+	def gpib_read(self):
+		#Tell the converter you want to read data
+		self.ser.write("++read eoi\r")
+		buffer = []
+		readvalue = "data"
+		#Read until there's nothing left to read
+		while (readvalue != ""):
+			readvalue = self.ser.readline()
+			buffer.append(readvalue)
+		
+		#Get rid of the \r\n in the strings
+		buffer = [lines.replace('\r\n', '') for lines in buffer]	
+			
+		if (len(buffer[:-1]) == 1):
+			#If the buffer only has 1 element then just return that element instead of a list		
+			return buffer[0]
+		else:
+			#Otherwise return all but the last (empty) element
+			return buffer[:-1]
+	#==============================================================================
+	
+	
+	
+	
+			
+	#=======================================WRITE TO THE DEVICE		
+	def gpib_write(self,gpibstr):
+		#Doesn't really need its own function, but might become more elaborate later
+		self.ser.write(gpibstr + "\r")
+	#==============================================================================
+	
+	
+	
+	
+	
+	
+	#=======================================CLEAR THE DEVICE      
+	def gpib_clear_device(self):
+		#Clear the device buffer in case there are leftovers from previous operation
+		self.ser.write("++read eoi\r")
+		empty_buffer = "full"
+		while (empty_buffer != ""):   
+			empty_buffer = self.ser.readline()
+	#==============================================================================
+	
+	
+	
+	
+	#=======================================VERIFY COMMUNICATION
+	def verify_communication(self):
+		gpib_write("ID?")
+		device_id = gpib_read()
+		if (device_id == "HP3562A"):
+			print "HP3562A Functioning Properly"
+		else:
+			print "ID = " + device_id
+			print "Bad Data Transfer - Exiting"
+			sys.exit()
+	#==============================================================================		
+	
 
 
 
@@ -116,11 +130,11 @@ class data():
 
 
 	#=======================================INITIALIZE
-	def __init__(self, filename):
+	def __init__(self, gpib_device, filename):
 		
 		#Obtain the data. Either read it from the GPIB or from a file
 		if (filename==""):
-			self.transfer = self.read_active_trace()
+			self.transfer = self.read_active_trace(gpib_device)
 		else:
 			self.transfer = self.load_rawfile(filename)
 		
@@ -140,9 +154,9 @@ class data():
 				
 
 	#=======================================READ THE ACTIVE TRACE
-	def read_active_trace(self):
-		gpib_write("DDAS")
-		trace = gpib_read()
+	def read_active_trace(self, gpib_device):
+		gpib_device.gpib_write("DDAS")
+		trace = gpib_device.gpib_read()
 		print "Read data from Device"
 		return trace
 	#==============================================================================		
@@ -283,7 +297,7 @@ class GUI_window(QtGui.QMainWindow):
         
         
         #=======================================INITIALIZE MAIN GUI WIDGET
-	def __init__(self,trace,parent=None):
+	def __init__(self,args,parent=None):
    		super(GUI_window, self).__init__(parent)
    		#Create the Main Widget
    		self.main_widget = QtGui.QWidget()
@@ -293,8 +307,12 @@ class GUI_window(QtGui.QMainWindow):
 		
 		
 		self.trace_list =[]
-		self.trace_list.append(trace)
+		self.num_plots = 0
 		
+		if (len(args)>1):
+			self.trace_list.append(data("",args[1]))
+			
+			
 		
 		#Make the figure
 		self.fig = Figure()
@@ -350,34 +368,59 @@ class GUI_window(QtGui.QMainWindow):
 		self.qbtn_addplot = QtGui.QPushButton('Add Plot', self.main_widget)
 		self.qbtn_addplot.clicked.connect(self.addplot)			
 		
-		
+		#Addplot button
+		self.qbtn_acquire = QtGui.QPushButton('Acquire New Data', self.main_widget)
+		self.qbtn_acquire.clicked.connect(self.acquire_newdata)			
 		
 		#Want the buttons and stuff to be in a nice vertical line on the right
 		self.right_box = QtGui.QVBoxLayout()
 		self.right_box.addWidget(self.qbtn_quit)
 		self.right_box.addWidget(self.qbtn_oplot)
 		self.right_box.addWidget(self.qbtn_addplot)
+		self.right_box.addWidget(self.qbtn_acquire)
 	#==============================================================================		
 
 
 
 	
 	
-	#=======================================ADD OVERPLOT
+	#=======================================OVERPLOT
 	def oplot(self):
 		self.openfile_dialog()
-		self.axes.plot(self.trace.xdata,self.trace.ydata)
+		opened_data = len(self.trace_list)-1
+		self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
 		self.canvas.draw()
 	#==============================================================================		
+
+
 	
 	
 	
+	#=======================================AQUIRE NEW DATA	
+	def acquire_newdata(self):
+		addr=30
+		port = '/dev/tty.usbserial-PXG7UUUG'
+		self.dsa = gpib(addr,port)
+		self.trace_list.append(data(self.dsa,""))
+		self.make_plots()
+		#if (len(self.trace_list)==1):
+		#	self.oplot()
+		#else:
+		#	self.addplot()
+			
+	#==============================================================================		
+
+
+
+
+
 	
 	
 	#=======================================ADD NEW PLOT
 	def addplot(self):
 		self.openfile_dialog()
 		self.make_plots()
+		self.canvas.draw()
 		#self.axes = self.fig.add_subplot(212)
 		#self.axes.plot(self.trace_list[len(self.trace_list)-1].xdata,self.trace_list[len(self.trace_list)-1].ydata)
 		#self.canvas.draw()
@@ -393,7 +436,7 @@ class GUI_window(QtGui.QMainWindow):
 	    	filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
         
         	if filename:
-        		self.trace_list.append(data(filename))
+        		self.trace_list.append(data("",filename))
 	#==============================================================================		
 	
 	
@@ -419,8 +462,7 @@ class GUI_window(QtGui.QMainWindow):
 			
 		self.canvas = FigureCanvas(self.fig)
 		self.canvas.setParent(self.main_widget)
-		self.canvas.draw()
-		self.main_widget.show()	
+		
 	#==============================================================================		
 		
 		
@@ -446,56 +488,54 @@ if __name__ == "__main__":
 
 	app = QtGui.QApplication(sys.argv)
 
-
-	if len(sys.argv) == 1:
-		#If no argument is passed then ask the user to pick one	
-		first_file = load_first_file()
-       		first_trace = data(first_file.filename)
-        		
-        else:
-        	if (sys.argv[1] == "gpib"):
-        		#Read from the GPIB Controller
-        	
-			#Baudrate and other stuff doesn't matter
-			ser = serial.Serial('/dev/tty.usbserial-PXG7UUUG',rtscts=0,timeout=1)
-			
-			#Found from the DSA front panel
-			addr=30
-			
-			#Initiate the GPIB converter
-			gpib_init(addr)
-			
-			#Verify that the computer, converter and device are communicating correctly
-			verify_communication()
-		
-		
-		
-			gpib_write("++ver")
-			version = gpib_read()
-			
-			gpib_write("ID?")
-			device_id = gpib_read()
-			
-			gpib_write("RDY?")
-			ready_status = gpib_read()
-		
-			#Print out diagnostic data
-	 		print "Size = " + str(len(data))
-	 		print "ID = " + device_id
-			print "Ready? " + ready_status
-	 		print "Version = " + version
-		
-		
-			first_trace = data(sys.argv[1])
-			
-			#Return control to the DSA
-			gpib_write("++mode 0")
-		else:
-			#Load the indicated filename
-			first_trace = data(sys.argv[1])
+# 
+# 	if len(sys.argv) == 1:
+# 		#If no argument is passed then ask the user to pick one	
+# 		first_file = load_first_file()
+#        		first_trace = data(first_file.filename)
+#         		
+#         else:
+#         	if (sys.argv[1] == "gpib"):
+#         		#Read from the GPIB Controller
+#         				
+# 			
+# 			#Found from the DSA front panel
+# 			addr=30
+# 			port = '/dev/tty.usbserial-PXG7UUUG'
+# 			
+# 			#Initiate the GPIB converter
+# 			dsa = gpib(addr,port)
+# 			
+# 			#Verify that the computer, converter and device are communicating correctly
+# 			dsa.verify_communication()
+# 		
+# 		
+# 		
+# 			dsa.gpib_write("++ver")
+# 			version = dsa.gpib_read()
+# 			
+# 			dsa.gpib_write("ID?")
+# 			device_id = dsa.gpib_read()
+# 			
+# 			gpib_write("RDY?")
+# 			ready_status = dsa.gpib_read()
+# 		
+# 			#Print out diagnostic data
+# 	 		print "ID = " + device_id
+# 			print "Ready? " + ready_status
+# 	 		print "Version = " + version
+# 		
+# 		
+# 			first_trace = data(dsa,sys.argv[1])
+# 			
+# 			#Return control to the DSA
+# 			gpib_write("++mode 0")
+# 		else:
+# 			#Load the indicated filename
+# 			first_trace = data(dsa,sys.argv[1])
 		
 	
-    	w = GUI_window(first_trace)
+    	w = GUI_window(sys.argv)
     	#w.plot_data(freq,magnitude,'log')
     	#w.setWindowTitle("Current Trace")
  	#w.show()
