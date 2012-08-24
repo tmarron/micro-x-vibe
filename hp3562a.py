@@ -140,8 +140,6 @@ class Data():
         #y-axis units (amplitude) = 10
         #Volts peak/rms = 9
 
-
-
         self.header = self.transfer[0:67]
         self.data = self.transfer[67:]
         if (verbose == True):
@@ -185,7 +183,6 @@ class Data():
         else:
             self.real = map(float,self.data)
             self.imaginary = map(float,self.data)
-
 
         # Convert to magnitude
         self.complex_values = []
@@ -301,7 +298,10 @@ class GUI_window(QtGui.QMainWindow):
         '''Add new plot'''
         self.openfile_dialog()
         self.make_plots()
+        # Re-draw the fig canvas (why not?!)
+        self.fig.canvas.draw()
         self.canvas.draw()
+
         #self.axes = self.fig.add_subplot(212)
         #self.axes.plot(self.trace_list[len(self.trace_list)-1].xdata,self.trace_list[len(self.trace_list)-1].ydata)
         #self.canvas.draw()
@@ -327,6 +327,9 @@ class GUI_window(QtGui.QMainWindow):
             self.axes.set_xscale(self.trace_list[k].log)
             self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata))
             self.axes.grid(True, 'both')
+
+            # Re-draw the axes canvas!
+            self.axes.figure.canvas.draw()
 
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_widget)
