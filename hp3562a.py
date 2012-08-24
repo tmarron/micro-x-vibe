@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 
-# Reads data from the HP 3562A DSA
+# This program reads data from the HP 3562A DSA via (company)
+# GPIB->USB converter.
 
-
-
-#=======================================IMPORTS
 import os
 import termios
 import serial
@@ -16,10 +14,6 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 import sys
 from PyQt4 import QtGui, QtCore
-#==============================================================================
-
-
-
 
 
 #==============================================================================		
