@@ -210,7 +210,7 @@ class data():
 	def create_frequency_array(self):
 		#Create frequency array
 
-		if (self.log == 1):
+		if (self.log == 'log'):
 			xdata = self.start_freq * np.power(10,self.delta_freq * np.arange(self.num_data_points))
 		else:
 			xdata = self.start_freq + self.delta_freq * np.arange(self.num_data_points)
@@ -291,22 +291,17 @@ class GUI_window(QtGui.QMainWindow):
 		self.main_widget.move(300, 300)
 		self.main_widget.setWindowTitle('HP3562A GUI')     
 		
+		
+		self.trace_list =[]
+		self.trace_list.append(trace)
+		
+		
 		#Make the figure
 		self.fig = Figure()
         
 		#add subplot
-		self.axes = self.fig.add_subplot(111)
+		self.make_plots()
 		
-		#Want the axes cleared every time plot() is called
-		#self.axes.hold(False)
-	
-		#Take care of all the plotting
-		self.plt = self.axes.plot(trace.xdata,trace.ydata)
-		self.axes.set_xscale(trace.log)
-		self.axes.set_xlim(min(trace.xdata),max(trace.xdata))
-		self.axes.grid(True, 'both')
-		self.canvas = FigureCanvas(self.fig)
-		self.canvas.setParent(self.main_widget)
 		
 		#Define the toolbar	
 		self.mpl_toolbar = NavigationToolbar(self.canvas, self.main_widget)
@@ -323,12 +318,7 @@ class GUI_window(QtGui.QMainWindow):
 		#Add Buttons
 		self.display_buttons()
 		
-		
-		
-		#Want the plots to be in a nice vertical line on the right
-		self.right_box = QtGui.QVBoxLayout()
-		self.right_box.addWidget(self.qbtn_quit)
-		self.right_box.addWidget(self.qbtn_oplot)
+
 		
 		self.main_layout = QtGui.QHBoxLayout(self.main_widget)
 		self.main_layout.addLayout(self.left_box)
@@ -350,45 +340,90 @@ class GUI_window(QtGui.QMainWindow):
 		#Quit Button
 		self.qbtn_quit = QtGui.QPushButton('Quit', self.main_widget)
 		#qbtn_quit.clicked.connect(QtCore.QCoreApplication.instance().quit)
-		self.qbtn_quit.connect(self.qbtn_quit, QtCore.SIGNAL("clicked()"), app, QtCore.SLOT("quit()"))
-		#self.qbtn_quit.resize(qbtn_quit.sizeHint())
+		self.qbtn_quit.connect(self.qbtn_quit, QtCore.SIGNAL("clicked()"), app, QtCore.SLOT("quit()"))		
 		
-		
-		#Save plot button
+		#Overplot button
 		self.qbtn_oplot = QtGui.QPushButton('Over Plot', self.main_widget)
-		#qbtn_addplot.connect(qbtn_addplot, QtCore.SIGNAL("clicked()"), self.oplot())
 		self.qbtn_oplot.clicked.connect(self.oplot)
+
+		#Addplot button
+		self.qbtn_addplot = QtGui.QPushButton('Add Plot', self.main_widget)
+		self.qbtn_addplot.clicked.connect(self.addplot)			
 		
-		#qbtn_addplot.resize(qbtn_addplot.sizeHint())
-		#qbtn_addplot.move(700, 100)  		
+		
+		
+		#Want the buttons and stuff to be in a nice vertical line on the right
+		self.right_box = QtGui.QVBoxLayout()
+		self.right_box.addWidget(self.qbtn_quit)
+		self.right_box.addWidget(self.qbtn_oplot)
+		self.right_box.addWidget(self.qbtn_addplot)
 	#==============================================================================		
 
 
+
 	
 	
-	#=======================================ADD NEW PLOTS
+	#=======================================ADD OVERPLOT
 	def oplot(self):
 		self.openfile_dialog()
 		self.axes.plot(self.trace.xdata,self.trace.ydata)
 		self.canvas.draw()
 	#==============================================================================		
 	
-		
 	
 	
 	
-	#=======================================OPEN NEW PLOT
+	
+	#=======================================ADD NEW PLOT
+	def addplot(self):
+		self.openfile_dialog()
+		self.make_plots()
+		#self.axes = self.fig.add_subplot(212)
+		#self.axes.plot(self.trace_list[len(self.trace_list)-1].xdata,self.trace_list[len(self.trace_list)-1].ydata)
+		#self.canvas.draw()
+	#==============================================================================		
+			
+	
+	
+	
+	
+
+	#=======================================OPEN NEW DATA
 	def openfile_dialog(self):
 	    	filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
         
         	if filename:
-        		self.trace = data(filename)
+        		self.trace_list.append(data(filename))
 	#==============================================================================		
 	
 	
 		
 
 			
+	#=======================================MAKE PLOTS
+	def make_plots(self):
+		
+		
+		self.fig.clear()
+		#Want the axes cleared every time plot() is called
+		#self.axes.hold(False)
+	
+	
+		#Take care of all the plotting
+		for k in range(len(self.trace_list)):
+			self.axes = self.fig.add_subplot(len(self.trace_list),1,k+1)		
+			self.plt = self.axes.plot(self.trace_list[k].xdata,self.trace_list[k].ydata)
+			self.axes.set_xscale(self.trace_list[k].log)
+			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata))
+			self.axes.grid(True, 'both')
+			
+		self.canvas = FigureCanvas(self.fig)
+		self.canvas.setParent(self.main_widget)
+		self.canvas.draw()
+		self.main_widget.show()	
+	#==============================================================================		
+		
+		
 		
 		
 #==============================================================================		
