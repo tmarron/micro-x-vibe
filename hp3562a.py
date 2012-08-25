@@ -224,7 +224,9 @@ class GUI_window(QtGui.QMainWindow):
 
         # Make the figure
         self.fig = Figure()
-
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self.main_widget)
+        
         # add subplot
         self.make_plots()
 
@@ -281,6 +283,8 @@ class GUI_window(QtGui.QMainWindow):
         opened_data = len(self.trace_list)-1
         self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
         self.canvas.draw()
+        self.axes.figure.canvas.draw()
+
 
     def acquire_newdata(self):
         '''Acquire the new data'''
@@ -300,7 +304,7 @@ class GUI_window(QtGui.QMainWindow):
         self.make_plots()
         # Re-draw the fig canvas (why not?!)
         self.fig.canvas.draw()
-        self.canvas.draw()
+        #self.canvas.draw()
 
         #self.axes = self.fig.add_subplot(212)
         #self.axes.plot(self.trace_list[len(self.trace_list)-1].xdata,self.trace_list[len(self.trace_list)-1].ydata)
@@ -331,8 +335,7 @@ class GUI_window(QtGui.QMainWindow):
             # Re-draw the axes canvas!
             self.axes.figure.canvas.draw()
 
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self.main_widget)
+
 
 
 class LoadFirstFile(QtGui.QMainWindow):
