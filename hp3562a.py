@@ -210,15 +210,36 @@ class GUI_window(QtGui.QMainWindow):
     def __init__(self,args,parent=None):
         '''Initialize the GUI widget'''
         super(GUI_window, self).__init__(parent)
+        
+        #Position X, Position Y, Width, Height
+        self.setGeometry(300,100,700,500)
+        
         # Create the Main Widget
         self.main_widget = QtGui.QWidget()
-        self.main_widget.resize(800, 600)
-        self.main_widget.move(300, 300)
+        #self.main_widget.resize(600, 800)
+        #self.main_widget.move(300, 300)
         self.main_widget.setWindowTitle('HP3562A GUI')
+	self.setCentralWidget(self.main_widget)
 
-        self.trace_list =[]
-        self.num_plots = 0
 
+        #Add Status bar
+        self.statusBar().showMessage("Waiting for commands")
+
+	#Add Status bar
+	#self.status_bar_text = QtGui.QLabel("TestTestTestTestTestTestTestTest")
+	#self.statusBar().addWidget(self.status_bar_text, 1)
+        
+
+	#List for all the actual data
+        self.trace_list = []
+        
+        #List for the number plot each data belongs to
+        self.subplot_number = []
+        
+        #Total number of data (essentially the length of the trace_list array)
+        self.num_data = 0
+
+	#If a filename was supplied, load it up
         if (len(args)>1):
             self.trace_list.append(Data("",args[1]))
 
@@ -227,7 +248,9 @@ class GUI_window(QtGui.QMainWindow):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.main_widget)
         
-        # add subplot
+
+
+        #Plot any and all data (if any)
         self.make_plots()
 
         # Define the toolbar
@@ -238,17 +261,22 @@ class GUI_window(QtGui.QMainWindow):
         self.left_box.addWidget(self.canvas)
         self.left_box.addWidget(self.mpl_toolbar)
 
-        # Add Buttons
+        #Add Buttons
         self.display_buttons()
+        
 
         self.main_layout = QtGui.QHBoxLayout(self.main_widget)
+        
         self.main_layout.addLayout(self.left_box)
         self.main_layout.addLayout(self.right_box)
 
+
+	
         #self.setCentralWidget(self.main_widget)
         # Show the GUI
-        self.main_widget.show()
-
+	
+        #self.main_widget.show()
+	self.show()
     def display_buttons(self):
         '''Display buttons'''
 
@@ -272,14 +300,27 @@ class GUI_window(QtGui.QMainWindow):
         # Want the buttons and stuff to be in a nice vertical line on
         # the right
         self.right_box = QtGui.QVBoxLayout()
-        self.right_box.addWidget(self.qbtn_quit)
-        self.right_box.addWidget(self.qbtn_oplot)
-        self.right_box.addWidget(self.qbtn_addplot)
         self.right_box.addWidget(self.qbtn_acquire)
+        self.right_box.addWidget(self.qbtn_addplot)
+        self.right_box.addWidget(self.qbtn_oplot)
+        self.right_box.addWidget(self.qbtn_quit)
 
+        
+        
     def oplot(self):
         '''Overplot'''
+        
+        self.statusBar().showMessage("Loading data for overplotting")
+        
         self.openfile_dialog()
+        
+        #Assign which plot the new data belongs to
+        if (self.num_data == 0):
+            	self.subplot_number.append(0)
+        else:
+            	self.subplot_number.append(self.subplot_number[-1])
+        self.num_data += 1
+        
         opened_data = len(self.trace_list)-1
         self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
         self.canvas.draw()
@@ -288,6 +329,9 @@ class GUI_window(QtGui.QMainWindow):
 
     def acquire_newdata(self):
         '''Acquire the new data'''
+        
+        self.statusBar().showMessage("Connecting to GPIB to aquire new data")
+
         addr=30
         port = '/dev/tty.usbserial-PXG7UUUG'
         self.dsa = Gpib(addr,port)
@@ -300,7 +344,18 @@ class GUI_window(QtGui.QMainWindow):
 
     def addplot(self):
         '''Add new plot'''
+        
+        self.statusBar().showMessage("Loading data for new plot pane")
+
         self.openfile_dialog()
+
+        #Assign which plot the new data belongs to
+        if (self.num_data == 0):
+            	self.subplot_number.append(0)
+        else:
+            	self.subplot_number.append(self.subplot_number[-1]+1)
+        self.num_data += 1
+        
         self.make_plots()
         # Re-draw the fig canvas (why not?!)
         self.fig.canvas.draw()
@@ -317,6 +372,8 @@ class GUI_window(QtGui.QMainWindow):
         if filename:
             self.trace_list.append(Data("",filename))
 
+            
+
     def make_plots(self):
         '''Make plots'''
 
@@ -326,18 +383,27 @@ class GUI_window(QtGui.QMainWindow):
 
         # Take care of all the plotting
         for k in range(len(self.trace_list)):
-            self.axes = self.fig.add_subplot(len(self.trace_list),1,k+1)
-            self.plt = self.axes.plot(self.trace_list[k].xdata,self.trace_list[k].ydata)
-            self.axes.set_xscale(self.trace_list[k].log)
-            self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata))
-            self.axes.grid(True, 'both')
+        
 
-            # Re-draw the axes canvas!
-            self.axes.figure.canvas.draw()
+		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):
+			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
+			self.axes.set_xscale(self.trace_list[k].log)
+			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata))
+			self.axes.grid(True, 'both')
+			self.axes.set_ylabel("Amplitude")
+			self.axes.get_xaxis().set_visible(False)
+			if (k == len(self.trace_list)-1):			
+				self.axes.set_xlabel("Frequency [Hz]")
+				self.axes.get_xaxis().set_visible(True)
 
+		#self.axes.set_ylim()			
+		self.plt = self.axes.plot(self.trace_list[k].xdata,self.trace_list[k].ydata)
+		# Re-draw the axes canvas!
+		self.axes.figure.canvas.draw()
 
+        self.statusBar().showMessage("Waiting for commands")
 
-
+        
 class LoadFirstFile(QtGui.QMainWindow):
     '''What am I for?'''
 
