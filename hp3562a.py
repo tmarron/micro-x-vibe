@@ -197,11 +197,18 @@ class Data():
 
     def save_rawfile(self, rawfilename):
         '''Save the raw file'''
-        rawfile = open(rawfilename,"w")
-        for datapoint in trace:
+        rawfile = open(rawfilename+"-raw.txt","w")
+        for datapoint in self.transfer:
             rawfile.write(str(datapoint)+"\n")
         rawfile.close()
 
+    def save_nicefile(self, rawfilename):
+        '''Save the raw file'''
+        nicefile = open(rawfilename+".txt","w")
+        nicefile.write("Hz,real,imaginary,V^2 (rms) \n")
+        for freq,real,imag,mag in zip(self.xdata,self.real,self.imaginary,self.ydata):
+        	nicefile.write(str(freq)+","+str(real)+","+str(imag)+","+str(mag) + "\n")
+        nicefile.close()
 
 class GUI_window(QtGui.QMainWindow):
     '''GUI Window'''
@@ -332,15 +339,29 @@ class GUI_window(QtGui.QMainWindow):
         
         self.statusBar().showMessage("Connecting to GPIB to aquire new data")
 
+	#Connection settings
         addr=30
         port = '/dev/tty.usbserial-PXG7UUUG'
+        
+        #Establish GPIB class (at the moment this is overwritten each acquire, which probably isn't the most elegant method)
         self.dsa = Gpib(addr,port)
-        self.trace_list.append(Data(self.dsa,""))
+        
+        #Establish the new data class
+        newdata = Data(self.dsa,"")
+        
+        #Append the trace to the big trace_list 
+        self.trace_list.append(newdata)
+        
+        #Get the filename base to save the new data to
+        save_filename_base = self.savefile_dialog()
+        
+        #Save the raw and nice data        
+	newdata.save_rawfile(save_filename_base)
+	newdata.save_nicefile(save_filename_base)
+	
+	#Make the plots
         self.make_plots()
-        #if (len(self.trace_list)==1):
-        #   self.oplot()
-        #else:
-        #   self.addplot()
+
 
     def addplot(self):
         '''Add new plot'''
@@ -359,19 +380,24 @@ class GUI_window(QtGui.QMainWindow):
         self.make_plots()
         # Re-draw the fig canvas (why not?!)
         self.fig.canvas.draw()
-        #self.canvas.draw()
 
-        #self.axes = self.fig.add_subplot(212)
-        #self.axes.plot(self.trace_list[len(self.trace_list)-1].xdata,self.trace_list[len(self.trace_list)-1].ydata)
-        #self.canvas.draw()
 
     def openfile_dialog(self):
         '''Open new data'''
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
 
         if filename:
-            self.trace_list.append(Data("",filename))
+        	newdata = Data("",filename)
+            	self.trace_list.append(newdata)
+            	newdata.save_rawfile(self.savefile_dialog())
+            	newdata.save_nicefile(self.savefile_dialog())
+            	
 
+    def savefile_dialog(self):
+        '''Open new data'''
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Filename base to save new data to', '.')
+
+        return filename
             
 
     def make_plots(self):
