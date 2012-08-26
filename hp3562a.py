@@ -236,12 +236,17 @@ class GUI_window(QtGui.QMainWindow):
 	#self.status_bar_text = QtGui.QLabel("TestTestTestTestTestTestTestTest")
 	#self.statusBar().addWidget(self.status_bar_text, 1)
         
+        
 
 	#List for all the actual data
         self.trace_list = []
         
         #List for the number plot each data belongs to
         self.subplot_number = []
+	
+	#List for the legend labels for all the data        
+        self.legend_list = []
+
         
         #Total number of data (essentially the length of the trace_list array)
         self.num_data = 0
@@ -277,7 +282,6 @@ class GUI_window(QtGui.QMainWindow):
         self.main_layout.addLayout(self.left_box)
         self.main_layout.addLayout(self.right_box)
 
-
 	
         #self.setCentralWidget(self.main_widget)
         # Show the GUI
@@ -306,34 +310,24 @@ class GUI_window(QtGui.QMainWindow):
 
         # Want the buttons and stuff to be in a nice vertical line on
         # the right
+        
+        #Right box
         self.right_box = QtGui.QVBoxLayout()
-        self.right_box.addWidget(self.qbtn_acquire)
-        self.right_box.addWidget(self.qbtn_addplot)
-        self.right_box.addWidget(self.qbtn_oplot)
-        self.right_box.addWidget(self.qbtn_quit)
-
         
+        #Top right box for legend labels
+        self.topright_box = QtGui.QVBoxLayout()
         
-    def oplot(self):
-        '''Overplot'''
+        #Bottom right box for buttons
+        self.botright_box = QtGui.QVBoxLayout()
+        self.botright_box.addWidget(self.qbtn_acquire)	
+        self.botright_box.addWidget(self.qbtn_addplot)
+        self.botright_box.addWidget(self.qbtn_oplot)
+        self.botright_box.addWidget(self.qbtn_quit)
         
-        self.statusBar().showMessage("Loading data for overplotting")
-        
-        self.openfile_dialog()
-        
-        #Assign which plot the new data belongs to
-        if (self.num_data == 0):
-            	self.subplot_number.append(0)
-        else:
-            	self.subplot_number.append(self.subplot_number[-1])
-        self.num_data += 1
-        
-        opened_data = len(self.trace_list)-1
-        self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
-        self.canvas.draw()
-        self.axes.figure.canvas.draw()
-
-
+        #Add the two mini layouts to the main right layout
+        self.right_box.addLayout(self.topright_box)
+        self.right_box.addLayout(self.botright_box)
+            
     def acquire_newdata(self):
         '''Acquire the new data'''
         
@@ -363,6 +357,30 @@ class GUI_window(QtGui.QMainWindow):
         self.make_plots()
 
 
+    def oplot(self):
+        '''Overplot'''
+        
+        if (len(self.trace_list) > 0):
+		self.statusBar().showMessage("Loading data for overplotting")
+		
+		self.openfile_dialog()
+		
+		#Assign which plot the new data belongs to
+		if (self.num_data == 0):
+			self.subplot_number.append(0)
+		else:
+			self.subplot_number.append(self.subplot_number[-1])
+		self.num_data += 1
+		
+		opened_data = len(self.trace_list)-1
+		self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
+		self.canvas.draw()
+		self.axes.figure.canvas.draw()
+	        self.add_legend_label()
+	else:
+		self.statusBar().showMessage("Can't overplot until a plot is first added")
+
+
     def addplot(self):
         '''Add new plot'''
         
@@ -378,9 +396,24 @@ class GUI_window(QtGui.QMainWindow):
         self.num_data += 1
         
         self.make_plots()
-        # Re-draw the fig canvas (why not?!)
+        
+        self.add_legend_label()
+
         self.fig.canvas.draw()
 
+
+
+    def add_legend_label(self):
+    	'''Adds a new legend label to the GUI'''
+    	
+        newlegend_label = QtGui.QLineEdit(self)
+        newlegend_label.textChanged[str].connect(self.legend_label_changed)
+        self.legend_list.append(newlegend_label)
+        self.topright_box.addWidget(self.legend_list[self.num_data-1])
+        
+    
+    def legend_label_changed(self):
+    	self.axes.legend([self.linex,self.liney,self.linez],['X-axis','Y-axis','Z-axis'])
 
     def openfile_dialog(self):
         '''Open new data'''
@@ -389,8 +422,6 @@ class GUI_window(QtGui.QMainWindow):
         if filename:
         	newdata = Data("",filename)
             	self.trace_list.append(newdata)
-            	newdata.save_rawfile(self.savefile_dialog())
-            	newdata.save_nicefile(self.savefile_dialog())
             	
 
     def savefile_dialog(self):
@@ -408,6 +439,9 @@ class GUI_window(QtGui.QMainWindow):
         #self.axes.hold(False)
 
         # Take care of all the plotting
+        
+        self.axes_list = []
+        
         for k in range(len(self.trace_list)):
         
 
@@ -421,6 +455,8 @@ class GUI_window(QtGui.QMainWindow):
 			if (k == len(self.trace_list)-1):			
 				self.axes.set_xlabel("Frequency [Hz]")
 				self.axes.get_xaxis().set_visible(True)
+			
+			self.axes_list.append(self.axes)
 
 		#self.axes.set_ylim()			
 		self.plt = self.axes.plot(self.trace_list[k].xdata,self.trace_list[k].ydata)
