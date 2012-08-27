@@ -310,11 +310,6 @@ class GUI_window(QtGui.QMainWindow):
         # Acquire button
         self.qbtn_acquire = QtGui.QPushButton('Acquire New Data', self.main_widget)
         self.qbtn_acquire.clicked.connect(self.acquire_newdata)
-
-        # Refresh button
-        self.qbtn_refresh = QtGui.QPushButton('Refresh Plots', self.main_widget)
-        self.qbtn_refresh.clicked.connect(self.make_plots)
-        
         
         # Want the buttons and stuff to be in a nice vertical line on
         # the right
@@ -330,7 +325,6 @@ class GUI_window(QtGui.QMainWindow):
         self.botright_box.addWidget(self.qbtn_acquire)	
         self.botright_box.addWidget(self.qbtn_addplot)
         self.botright_box.addWidget(self.qbtn_oplot)
-        self.botright_box.addWidget(self.qbtn_refresh)
         self.botright_box.addWidget(self.qbtn_quit)
         
         #Add the two mini layouts to the main right layout
@@ -416,8 +410,7 @@ class GUI_window(QtGui.QMainWindow):
     	
         newlegend_label = QtGui.QLineEdit(self)
         
-        #Might want to change this to returnPressed instead of textChanged
-        newlegend_label.textChanged[str].connect(self.legend_label_changed)
+        newlegend_label.editingFinished.connect(self.make_plots)
         self.legend_list.append(newlegend_label)
         self.topright_box.addWidget(self.legend_list[self.num_data-1])
         
@@ -473,27 +466,30 @@ class GUI_window(QtGui.QMainWindow):
         self.axes_list = []
         self.line_list = []
         
+        #Loop the all the traces
         for k in range(len(self.trace_list)):
         
-
+		#If it's the first trace, or starting a new subplot
 		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
 			self.axes.set_xscale(self.trace_list[k].log)
-			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata))
+			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata)+1)
 			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
-			self.axes.grid(True, 'both')
 			self.axes.set_ylabel("Amplitude")
 			self.axes.get_xaxis().set_visible(False)
-			
-			if (k == len(self.trace_list)-1):			
-				self.axes.set_xlabel("Frequency [Hz]")
-				self.axes.get_xaxis().set_visible(True)
-			
 			self.axes_list.append(self.axes)
 
+		#If it's the very last line
+		if (k == len(self.trace_list)-1):
+			self.axes.set_xlabel("Frequency [Hz]")
+			#This is making the xaxis invisible, not just the labels. Need to fix this.
+			self.axes.get_xaxis().set_visible(True)
+				
+				
 		newline = Line2D(self.trace_list[k].xdata,self.trace_list[k].ydata,color=self.color_list[k])
 		self.line_list.append(newline)
 		self.axes.add_line(newline)		
+		self.axes.grid(True, 'both')
 		
 		self.legend_label_changed()		
 		
