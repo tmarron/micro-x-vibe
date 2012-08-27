@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+from matplotlib.lines import Line2D
 import sys
 from PyQt4 import QtGui, QtCore
 
@@ -247,6 +248,8 @@ class GUI_window(QtGui.QMainWindow):
 	#List for the legend labels for all the data        
         self.legend_list = []
 
+        #List of possible colors
+        self.color_list = ['b','g','r','c','m','y','k','w']
         
         #Total number of data (essentially the length of the trace_list array)
         self.num_data = 0
@@ -304,10 +307,15 @@ class GUI_window(QtGui.QMainWindow):
         self.qbtn_addplot = QtGui.QPushButton('Add Plot', self.main_widget)
         self.qbtn_addplot.clicked.connect(self.addplot)
 
-        # Addplot button
+        # Acquire button
         self.qbtn_acquire = QtGui.QPushButton('Acquire New Data', self.main_widget)
         self.qbtn_acquire.clicked.connect(self.acquire_newdata)
 
+        # Refresh button
+        self.qbtn_refresh = QtGui.QPushButton('Refresh Plots', self.main_widget)
+        self.qbtn_refresh.clicked.connect(self.make_plots)
+        
+        
         # Want the buttons and stuff to be in a nice vertical line on
         # the right
         
@@ -322,6 +330,7 @@ class GUI_window(QtGui.QMainWindow):
         self.botright_box.addWidget(self.qbtn_acquire)	
         self.botright_box.addWidget(self.qbtn_addplot)
         self.botright_box.addWidget(self.qbtn_oplot)
+        self.botright_box.addWidget(self.qbtn_refresh)
         self.botright_box.addWidget(self.qbtn_quit)
         
         #Add the two mini layouts to the main right layout
@@ -363,20 +372,21 @@ class GUI_window(QtGui.QMainWindow):
         if (len(self.trace_list) > 0):
 		self.statusBar().showMessage("Loading data for overplotting")
 		
-		self.openfile_dialog()
+		success = self.openfile_dialog()
 		
-		#Assign which plot the new data belongs to
-		if (self.num_data == 0):
-			self.subplot_number.append(0)
-		else:
-			self.subplot_number.append(self.subplot_number[-1])
-		self.num_data += 1
-		
-		opened_data = len(self.trace_list)-1
-		self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
-		self.canvas.draw()
-		self.axes.figure.canvas.draw()
-	        self.add_legend_label()
+		if success:
+			#Assign which plot the new data belongs to
+			if (self.num_data == 0):
+				self.subplot_number.append(0)
+			else:
+				self.subplot_number.append(self.subplot_number[-1])
+			self.num_data += 1
+			
+# 			opened_data = len(self.trace_list)-1
+# 			self.axes.plot(self.trace_list[opened_data].xdata,self.trace_list[opened_data].ydata)
+# 			self.canvas.draw()
+			self.add_legend_label()
+			self.make_plots()
 	else:
 		self.statusBar().showMessage("Can't overplot until a plot is first added")
 
@@ -386,20 +396,18 @@ class GUI_window(QtGui.QMainWindow):
         
         self.statusBar().showMessage("Loading data for new plot pane")
 
-        self.openfile_dialog()
+        success = self.openfile_dialog()
 
-        #Assign which plot the new data belongs to
-        if (self.num_data == 0):
-            	self.subplot_number.append(0)
-        else:
-            	self.subplot_number.append(self.subplot_number[-1]+1)
-        self.num_data += 1
-        
-        self.make_plots()
-        
-        self.add_legend_label()
-
-        self.fig.canvas.draw()
+	if success:
+		#Assign which plot the new data belongs to
+		if (self.num_data == 0):
+			self.subplot_number.append(0)
+		else:
+			self.subplot_number.append(self.subplot_number[-1]+1)
+		self.num_data += 1
+		
+		self.add_legend_label()
+		self.make_plots()
 
 
 
@@ -407,13 +415,33 @@ class GUI_window(QtGui.QMainWindow):
     	'''Adds a new legend label to the GUI'''
     	
         newlegend_label = QtGui.QLineEdit(self)
+        
+        #Might want to change this to returnPressed instead of textChanged
         newlegend_label.textChanged[str].connect(self.legend_label_changed)
         self.legend_list.append(newlegend_label)
         self.topright_box.addWidget(self.legend_list[self.num_data-1])
         
     
     def legend_label_changed(self):
-    	self.axes.legend([self.linex,self.liney,self.linez],['X-axis','Y-axis','Z-axis'])
+
+	#Below is a real mess. I had a lot of trouble getting the legend labels correct with the right plot/line
+	#This works. I should make it better, but not now.
+	for k in range(len(self.axes_list)):
+		locations = [i for i, x in enumerate(self.subplot_number) if x == k]
+
+		spot_start = min(locations)
+		spot_end = max(locations)
+		
+		lines = self.line_list[spot_start:spot_end+1]
+		label_list = self.legend_list[spot_start:spot_end+1]
+		labels = []
+		for item in label_list:
+			labels.append(str(item.text()))
+			
+		self.axes_list[k].legend(lines,labels)
+	
+
+
 
     def openfile_dialog(self):
         '''Open new data'''
@@ -422,7 +450,9 @@ class GUI_window(QtGui.QMainWindow):
         if filename:
         	newdata = Data("",filename)
             	self.trace_list.append(newdata)
-            	
+            	return 1
+        else:
+        	return 0
 
     def savefile_dialog(self):
         '''Open new data'''
@@ -441,6 +471,7 @@ class GUI_window(QtGui.QMainWindow):
         # Take care of all the plotting
         
         self.axes_list = []
+        self.line_list = []
         
         for k in range(len(self.trace_list)):
         
@@ -449,20 +480,26 @@ class GUI_window(QtGui.QMainWindow):
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
 			self.axes.set_xscale(self.trace_list[k].log)
 			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata))
+			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
 			self.axes.grid(True, 'both')
 			self.axes.set_ylabel("Amplitude")
 			self.axes.get_xaxis().set_visible(False)
+			
 			if (k == len(self.trace_list)-1):			
 				self.axes.set_xlabel("Frequency [Hz]")
 				self.axes.get_xaxis().set_visible(True)
 			
 			self.axes_list.append(self.axes)
 
-		#self.axes.set_ylim()			
-		self.plt = self.axes.plot(self.trace_list[k].xdata,self.trace_list[k].ydata)
-		# Re-draw the axes canvas!
-		self.axes.figure.canvas.draw()
-
+		newline = Line2D(self.trace_list[k].xdata,self.trace_list[k].ydata,color=self.color_list[k])
+		self.line_list.append(newline)
+		self.axes.add_line(newline)		
+		
+		self.legend_label_changed()		
+		
+	# Re-draw the axes canvas!
+	self.canvas.draw()
+	
         self.statusBar().showMessage("Waiting for commands")
 
         
