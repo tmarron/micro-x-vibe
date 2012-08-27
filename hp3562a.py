@@ -3,17 +3,21 @@
 # This program reads data from the HP 3562A DSA via (company)
 # GPIB->USB converter.
 
-import os
-import termios
+
 import serial
 import time
+import sys
+
+#http://numpy.scipy.org/
 import numpy as np
-import matplotlib.pyplot as plt
+
+#http://matplotlib.sourceforge.net/
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.lines import Line2D
-import sys
+
+#http://sourceforge.net/projects/pyqtx/files/latest/download?source=files
 from PyQt4 import QtGui, QtCore
 
 
@@ -149,7 +153,7 @@ class Data():
                 print k, lines
 
             print "Data:"
-            print self.data
+            #print self.data
 
         # Extract relevant header information
         self.num_data_points = int(float(self.header[2]))
@@ -529,7 +533,5 @@ if __name__ == "__main__":
 
     # GUI Widget
     w = GUI_window(sys.argv)
-    #w.plot_data(freq,magnitude,'log')
-    #w.setWindowTitle("Current Trace")
-    #w.show()
+
     sys.exit(app.exec_())
