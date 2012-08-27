@@ -226,7 +226,7 @@ class GUI_window(QtGui.QMainWindow):
         self.main_widget = QtGui.QWidget()
         #self.main_widget.resize(600, 800)
         #self.main_widget.move(300, 300)
-        self.main_widget.setWindowTitle('HP3562A GUI')
+        self.setWindowTitle('HP3562A Spectrum Analyzer Datatool (SAD)')
 	self.setCentralWidget(self.main_widget)
 
 
@@ -349,6 +349,14 @@ class GUI_window(QtGui.QMainWindow):
         #Append the trace to the big trace_list 
         self.trace_list.append(newdata)
         
+	#Assign which plot the new data belongs to
+	if (self.num_data == 0):
+		self.subplot_number.append(0)
+	else:
+		self.subplot_number.append(self.subplot_number[-1]+1)
+	
+	self.num_data += 1
+	
         #Get the filename base to save the new data to
         save_filename_base = self.savefile_dialog()
         
@@ -356,9 +364,16 @@ class GUI_window(QtGui.QMainWindow):
 	newdata.save_rawfile(save_filename_base)
 	newdata.save_nicefile(save_filename_base)
 	
+
+		
+		
 	#Make the plots
+        self.add_legend_label()
         self.make_plots()
 
+	self.dsa.gpib_write("++mode 0")
+
+		
 
     def oplot(self):
         '''Overplot'''
@@ -431,7 +446,7 @@ class GUI_window(QtGui.QMainWindow):
 		for item in label_list:
 			labels.append(str(item.text()))
 			
-		self.axes_list[k].legend(lines,labels)
+		self.axes_list[k].legend(lines,labels,'upper left')
 	
 
 
@@ -468,7 +483,6 @@ class GUI_window(QtGui.QMainWindow):
         
         #Loop the all the traces
         for k in range(len(self.trace_list)):
-        
 		#If it's the first trace, or starting a new subplot
 		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
@@ -476,15 +490,17 @@ class GUI_window(QtGui.QMainWindow):
 			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata)+1)
 			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
 			self.axes.set_ylabel("Amplitude")
-			self.axes.get_xaxis().set_visible(False)
+			
+			#Commented these lines out because it also erased the grid lines at f=100. Annoying!
+			#if (self.subplot_number[k] != max(self.subplot_number)):
+			#	self.axes.get_xaxis().set_ticks([])
 			self.axes_list.append(self.axes)
 
 		#If it's the very last line
 		if (k == len(self.trace_list)-1):
 			self.axes.set_xlabel("Frequency [Hz]")
 			#This is making the xaxis invisible, not just the labels. Need to fix this.
-			self.axes.get_xaxis().set_visible(True)
-				
+			#self.axes.get_xaxis().set_visible(True)
 				
 		newline = Line2D(self.trace_list[k].xdata,self.trace_list[k].ydata,color=self.color_list[k])
 		self.line_list.append(newline)
@@ -510,52 +526,6 @@ class LoadFirstFile(QtGui.QMainWindow):
 if __name__ == "__main__":
     # QT App
     app = QtGui.QApplication(sys.argv)
-
-#
-#   if len(sys.argv) == 1:
-#       #If no argument is passed then ask the user to pick one
-#       first_file = LoadFirstFile()
-#               first_trace = Data(first_file.filename)
-#
-#         else:
-#           if (sys.argv[1] == "gpib"):
-#               #Read from the GPIB Controller
-#
-#
-#           #Found from the DSA front panel
-#           addr=30
-#           port = '/dev/tty.usbserial-PXG7UUUG'
-#
-#           #Initiate the GPIB converter
-#           dsa = Gpib(addr,port)
-#
-#           #Verify that the computer, converter and device are communicating correctly
-#           dsa.verify_communication()
-#
-#
-#
-#           dsa.gpib_write("++ver")
-#           version = dsa.gpib_read()
-#
-#           dsa.gpib_write("ID?")
-#           device_id = dsa.gpib_read()
-#
-#           gpib_write("RDY?")
-#           ready_status = dsa.gpib_read()
-#
-#           #Print out diagnostic data
-#           print "ID = " + device_id
-#           print "Ready? " + ready_status
-#           print "Version = " + version
-#
-#
-#           first_trace = Data(dsa,sys.argv[1])
-#
-#           #Return control to the DSA
-#           gpib_write("++mode 0")
-#       else:
-#           #Load the indicated filename
-#           first_trace = Data(dsa,sys.argv[1])
 
     # GUI Widget
     w = GUI_window(sys.argv)
