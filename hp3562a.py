@@ -507,6 +507,7 @@ class GUI_window(QtGui.QMainWindow):
 		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):	
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
 			self.axes.set_xscale(self.trace_list[k].log)
+			self.axes.set_yscale('log')
 			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata)+1)
 			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
 			self.axes.set_ylabel("Amplitude")
