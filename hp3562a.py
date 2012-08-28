@@ -325,6 +325,17 @@ class GUI_window(QtGui.QMainWindow):
         
         #Top right box for legend labels
         self.topright_box = QtGui.QVBoxLayout()
+        self.topright_box.addWidget(QtGui.QLabel("Plot Title"))
+	self.plottitle_lineedit = QtGui.QLineEdit(self)
+        #self.plottitle_lineedit.editingFinished.connect(self.make_title)
+        self.topright_box.addWidget(self.plottitle_lineedit)
+        self.topright_box.addWidget(QtGui.QLabel("Legend Labels"))
+        
+        
+        
+        
+        
+        
         
         #Bottom right box for buttons
         self.botright_box = QtGui.QVBoxLayout()
@@ -455,8 +466,11 @@ class GUI_window(QtGui.QMainWindow):
 		self.axes_list[k].legend(lines,labels,'upper left')
 	
 
-
-
+    def make_title(self):
+    	'''Makes the figure title'''
+    	#self.axes.set_title(self.plottitle_lineedit.text())
+	self.fig.suptitle(self.plottitle_lineedit.text())
+	
     def openfile_dialog(self):
         '''Open new data'''
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
@@ -490,13 +504,15 @@ class GUI_window(QtGui.QMainWindow):
         #Loop the all the traces
         for k in range(len(self.trace_list)):
 		#If it's the first trace, or starting a new subplot
-		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):
+		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):	
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
 			self.axes.set_xscale(self.trace_list[k].log)
 			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata)+1)
 			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
 			self.axes.set_ylabel("Amplitude")
-			
+			if (k==0):
+				self.make_title()
+							
 			#Commented these lines out because it also erased the grid lines at f=100. Annoying!
 			#if (self.subplot_number[k] != max(self.subplot_number)):
 			#	self.axes.get_xaxis().set_ticks([])
@@ -516,6 +532,7 @@ class GUI_window(QtGui.QMainWindow):
 		self.legend_label_changed()		
 		
 	# Re-draw the axes canvas!
+	
 	self.canvas.draw()
 	
         self.statusBar().showMessage("Waiting for commands")

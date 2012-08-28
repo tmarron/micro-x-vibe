@@ -1,0 +1,16 @@
+Insert / Cage is suspended on 4 bungees above some foam. The UFO is attached up top along the Z axis. Using the Samson amplifier and accelerometers on the FEA and AFT insert.
+
+Measuring X acceleration
+1: Ratio of FEA / Insert
+2: FEA
+3: Insert
+
+Measuring Y acceleration
+4: Ratio of FEA / Insert
+5: FEA
+6: Insert
+
+Measuring Z acceleration
+7: Ratio of FEA / Insert
+8: FEA
+9: Insert

@@ -6,7 +6,6 @@ Shake in Z measure in Y:
 3: FWD Insert
 
 Cage suspended on bungees. Shake in Z measure in Y:
-1: FEA / FWD Insert ratio
-2: FEA
-3: FWD Insert
-
+4: FEA / FWD Insert ratio
+5: FEA
+6: FWD Insert
