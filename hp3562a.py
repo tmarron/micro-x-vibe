@@ -528,7 +528,8 @@ class GUI_window(QtGui.QMainWindow):
 		newline = Line2D(self.trace_list[k].xdata,self.trace_list[k].ydata,color=self.color_list[k])
 		self.line_list.append(newline)
 		self.axes.add_line(newline)		
-		self.axes.grid(True, 'both')
+		self.axes.grid(True, which = 'major',axis="y")
+		self.axes.grid(True, which = 'both',axis="x")
 		
 		self.legend_label_changed()		
 		
