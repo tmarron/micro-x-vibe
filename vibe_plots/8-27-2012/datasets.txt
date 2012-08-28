@@ -1,0 +1,12 @@
+UFO On Insert cage. Cage lying on foam rubber.
+
+Shake in Z measure in Y:
+1: FEA / FWD Insert ratio
+2: FEA
+3: FWD Insert
+
+Cage suspended on bungees. Shake in Z measure in Y:
+1: FEA / FWD Insert ratio
+2: FEA
+3: FWD Insert
+
