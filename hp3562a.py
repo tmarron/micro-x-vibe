@@ -4,9 +4,11 @@
 # GPIB->USB converter.
 
 
-import serial
 import time
 import sys
+
+# http://pypi.python.org/pypi/pyserial
+import serial
 
 #http://numpy.scipy.org/
 import numpy as np
