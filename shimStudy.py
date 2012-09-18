@@ -26,8 +26,10 @@ def readSpectrum(fname):
 # A = with shims, or input...
 # B = without shims, or output...
 def plotTwo(freq, ampA, ampB, titleStr = '', pdf = None, legendNames = ['','']):
-	semilogx(freq, ampA, 'k')
-	semilogx(freq, ampB, 'b')
+	#semilogx(freq, ampA, 'k')
+	#semilogx(freq, ampA, 'k')
+	loglog(freq, ampA, 'k')
+	loglog(freq, ampB, 'b')
 	xlim(10, 600)
 	legend(legendNames)
 	title(titleStr)
