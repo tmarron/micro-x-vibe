@@ -1,0 +1,50 @@
+Moved Bigfoot to far Y-end of plate along spring axis to get a rocking motion.
+
+1: FEA Y / Insert Z
+2: FEA Y
+3: Insert Z
+
+4: FEA Z / Insert Z
+5: FEA Z
+6: Insert Z
+
+Moved Bigfoot to X end, underneath edge of 80/20
+7: FEA X / Insert Z
+8: FEA X
+9: Insert Z
+
+Moved Bigfoot to farther out on the X end of the plate
+10: FEA X / Insert Z
+11: FEA X
+12: Insert Z
+
+Art of Electronics under Bigfoot
+
+13: FEA X / Insert Z
+14: FEA X
+15: Insert Z
+
+16: FEA Y / Insert Z
+17: FEA Y
+18: Insert Z
+
+Moved bigfoot back along spring axis (Y)
+19: FEA X / Insert Z
+20: FEA X
+21: Insert Z
+
+
+Redoing observations 1-3 with Insert Y
+22: FEA Y / Insert Z
+23: FEA Y
+24: Insert Z
+
+
+25: FEA X / Insert X
+26: FEA X
+27: Insert x
+
+Redoing 25-27 with smaller frequency range (150-250Hz)
+28: FEA X / Insert X
+29: FEA X
+30: Insert x

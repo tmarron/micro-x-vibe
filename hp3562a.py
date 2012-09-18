@@ -111,6 +111,9 @@ class Data():
         else:
             self.transfer = self.load_rawfile(filename)
 
+	type = 'piezo'
+	self.set_accelerometer_calibrations(type)
+
         # Extract the header and the actual trace
         self.extract_header_data(False)
 
@@ -120,6 +123,12 @@ class Data():
 
         # Create the frequency array
         self.create_frequency_array()
+
+    def set_accelerometer_calibrations(self, type):
+    	'''Set accelerometer calibrations'''
+	self.accelerometer_calibration = 102.0	#mV/g
+
+
 
     def read_active_trace(self, gpib_device):
         '''Read active trace'''
@@ -507,7 +516,8 @@ class GUI_window(QtGui.QMainWindow):
 		if (k == 0) or (self.subplot_number[k] != self.subplot_number[k-1]):	
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
 			self.axes.set_xscale(self.trace_list[k].log)
-			self.axes.set_yscale('log')
+			self.axes.set_yscale('linear')
+			#self.axes.set_yscale('linear')
 			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata)+1)
 			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
 			self.axes.set_ylabel("Amplitude")

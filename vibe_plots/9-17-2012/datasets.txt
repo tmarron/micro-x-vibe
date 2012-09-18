@@ -1,0 +1,9 @@
+Same setup as last week. Two plates above and below the cage. Shaking Bigfoot along the spring axis (sort of). Measuring Y on both the insert and FEA.
+
+1: FEA Y / Insert Y
+2: FEA Y
+3: Insert Y
+
+4: FEA Z / Insert Z
+5: FEA Z
+6: Insert Z
