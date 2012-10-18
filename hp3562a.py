@@ -6,6 +6,7 @@
 
 import time
 import sys
+import math
 
 # http://pypi.python.org/pypi/pyserial
 import serial
@@ -18,6 +19,9 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.lines import Line2D
+import matplotlib as mpl
+
+mpl.rcParams['axes.color_cycle'] = ['k', 'r', 'b']
 
 #http://sourceforge.net/projects/pyqtx/files/latest/download?source=files
 from PyQt4 import QtGui, QtCore
@@ -126,9 +130,18 @@ class Data():
 
     def set_accelerometer_calibrations(self, type):
     	'''Set accelerometer calibrations'''
-	self.accelerometer_calibration = 102.0	#mV/g
+	#PCB Accelerometers (Rough average)
+	self.accelerometer_calibration = .1020	#V/g
 
-
+	#Wallops Accelerometers + Charge Amps
+	#This scaling is for a unit set to +/- 100Gs
+	#Ours is calibrated to +/-35Gs
+	#[Voltage] = A * [g-forces] + B = 0.0152 [g-forces] + 0.002836.
+	#Need to multiply this by 100/35
+	
+	#g-forces = ([Voltage] - 0.002836.) / 0.0152 * (35. / 100.)
+	#Approximate to 23g = 1.0 V
+	self.accelerometer_calibration = (1.0 / 23.0) #V/g
 
     def read_active_trace(self, gpib_device):
         '''Read active trace'''
@@ -194,20 +207,30 @@ class Data():
         '''Convert data'''
         # Separate the real and imaginary components
         if (self.complex_format == 1):
-            self.real = map(float,self.data[::2])
-            self.imaginary = map(float,self.data[1::2])
+        	#This data set is the ratio of two measurements and we want the phase information
+		self.real = np.array(map(float,self.data[::2]))
+		self.imaginary = np.array(map(float,self.data[1::2]))
+		#self.phase = np.arctan(self.imaginary / self.real)
+		self.phase = np.arctan2(self.imaginary, self.real)
+		#self.phase = np.angle(self.imaginary / self.real)
+
+		ydata = self.phase * 180. / 3.14
+		
         else:
-            self.real = map(float,self.data)
-            self.imaginary = map(float,self.data)
-
-        # Convert to magnitude
-        self.complex_values = []
-        ydata = []
-
-        for k in range(self.num_data_points):
-            #print k
-            self.complex_values.append(complex(self.real[k],self.imaginary[k]))
-            ydata.append(abs(complex(self.real[k],self.imaginary[k])))
+        	#This data is just one measurement and we want the amplitude
+		self.real = map(float,self.data)
+		self.imaginary = map(float,self.data)
+		
+		# Convert to magnitude
+		self.complex_values = []
+		ydata = []
+		
+		for k in range(self.num_data_points):
+		    #print k
+		    self.complex_values.append(complex(self.real[k],self.imaginary[k]))
+		    self.voltage_data = abs(complex(self.real[k],self.imaginary[k])) 
+		    self.g_data = math.sqrt(self.voltage_data) / self.accelerometer_calibration * math.sqrt(2)
+		    ydata.append(self.g_data)
 
         self.ydata = np.array(ydata)
 
@@ -264,7 +287,7 @@ class GUI_window(QtGui.QMainWindow):
         self.legend_list = []
 
         #List of possible colors
-        self.color_list = ['b','g','r','c','m','y','k','w']
+        self.color_list = ['k','r','b','c','m','g','y','w']
         
         #Total number of data (essentially the length of the trace_list array)
         self.num_data = 0
@@ -517,10 +540,18 @@ class GUI_window(QtGui.QMainWindow):
 			self.axes = self.fig.add_subplot(max(self.subplot_number)+1,1,self.subplot_number[k]+1)
 			self.axes.set_xscale(self.trace_list[k].log)
 			self.axes.set_yscale('linear')
-			#self.axes.set_yscale('linear')
 			self.axes.set_xlim(min(self.trace_list[k].xdata),max(self.trace_list[k].xdata)+1)
 			self.axes.set_ylim(min(self.trace_list[k].ydata),max(self.trace_list[k].ydata))
-			self.axes.set_ylabel("Amplitude")
+			
+			#If it's a phase plot show that in the ytitle. This is a little kludgy as I'm 
+			#just assuming any phase plot will have at least 1 negative value, whereas
+			#magnitude plots can't. Need a better solution later.
+			if min(self.trace_list[k].ydata) >= 0:
+				self.axes.set_ylabel("Acceleration [g]")
+			else:
+				self.axes.set_ylabel("Phase [Degrees]")
+				
+				
 			if (k==0):
 				self.make_title()
 							
