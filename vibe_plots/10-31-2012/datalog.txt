@@ -1,0 +1,47 @@
+Using bigfoot with 1 damper. Big aluminum plate on top of bigfoot. Then the 1010 damper. On top the damper is a 5 pound weight sandwiched between 2 small metal plates. Wallops accelerometer on top of weight, and about 4 inches from damper on the big aluminum plate.
+
+Phil standing on top of aluminum plate to dampen out any plate resonances. Mass is 5 pounds.
+1: Ratio of mass / plate
+2: mass
+3: plate
+
+Realized I hadn't bolted the second damper-base bolt down. Redoing above tests without standing on plate. Mass is 5 pounds.
+4: Ratio of mass / plate
+5: mass
+6: plate
+
+Now Phil standing on plate
+7: Ratio of mass / plate
+8: mass
+9: plate
+
+mass of 10 pounds on plate, no one standing on it
+10: Ratio of mass / plate
+11: mass
+12: plate
+
+mass of 10 pounds on plate, Ian standing on it
+13: Ratio of mass / plate
+14: mass
+15: plate
+
+mass of 25 pounds on plate, Ian standing on it
+16: Ratio of mass / plate
+17: mass
+18: plate
+
+mass of 25 pounds on bigfoot, not using the plate anymore
+19: Ratio of mass / plate
+20: mass
+21: plate
+
+mass of 10 pounds on bigfoot, not using the plate anymore
+22: Ratio of mass / plate
+23: mass
+24: plate
+
+Switching to the T44-15 dampers. Mass of 10 pounds on bigfoot, not using the plate anymore
+25: Ratio of mass / plate
+26: mass
+27: plate
+
