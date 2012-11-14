@@ -1,0 +1,6 @@
+Bigfoot with 1 wallops accelerometer taped to the top. Wire rope isolator (CA8-350-08) in top with the 25 pound weight and a wallops accelerometer on top of that.
+
+
+1: Ratio
+2: Mass
+3: Bigfoot

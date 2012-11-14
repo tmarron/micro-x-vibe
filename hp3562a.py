@@ -190,11 +190,16 @@ class Data():
             #print self.data
 
         # Extract relevant header information
-        self.num_data_points = int(float(self.header[2]))
-        self.start_freq = float(self.header[65])
-        self.delta_freq = float(self.header[56])
-        self.complex_format = int(float(self.header[37]))
-
+	try:       
+		self.num_data_points = int(float(self.header[2]))
+		self.start_freq = float(self.header[65])
+		self.delta_freq = float(self.header[56])
+		self.complex_format = int(float(self.header[37]))
+	except:
+		print 'ERROR READING HEADER - DUMPING HEADER AND EXITING:'
+		print header
+		sys.exit()
+		
         # For X-axis log = 1, linear = 0
         log = int(float(self.header[41]))
         if (log==1):
@@ -282,6 +287,8 @@ class GUI_window(QtGui.QMainWindow):
     def __init__(self,args,parent=None):
         '''Initialize the GUI widget'''
         super(GUI_window, self).__init__(parent)
+        
+        self.working_directory = '.'
         
         #Position X, Position Y, Width, Height
         self.setGeometry(300,100,700,500)
@@ -615,9 +622,14 @@ class GUI_window(QtGui.QMainWindow):
 	
     def openfile_dialog(self):
         '''Open new data'''
-        filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', '.', 'txt files (*.txt)')
+        filename = QtGui.QFileDialog.getOpenFileName(self, 'Open a data file', self.working_directory, 'txt files (*.txt)')
 
         if filename:
+		#Determine the file path to make that the current working directory
+		self.working_directory = str(filename)
+		self.working_directory = self.working_directory[0:self.working_directory.rfind('/')+1]
+
+
 		#Check which calibration to use
 		#If the pcb button is checked use it, otherwise use wallops
 		pcb_cal = self.pcb_button.isChecked()
@@ -631,7 +643,11 @@ class GUI_window(QtGui.QMainWindow):
 
     def savefile_dialog(self):
         '''Open new data'''
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Filename base to save new data to', '.')
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Filename base to save new data to', self.working_directory)
+	#Determine the file path to make that the current working directory
+	self.working_directory = str(filename)
+	self.working_directory = self.working_directory[0:self.working_directory.rfind('/')+1]
+
 
         return filename
             
