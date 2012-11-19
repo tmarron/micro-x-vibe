@@ -22,7 +22,7 @@ from matplotlib.lines import Line2D
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-mpl.rcParams['axes.color_cycle'] = ['k', 'r', 'b']
+#mpl.rcParams['axes.color_cycle'] = ['k', 'r', 'b']
 
 #http://sourceforge.net/projects/pyqtx/files/latest/download?source=files
 from PyQt4 import QtGui, QtCore

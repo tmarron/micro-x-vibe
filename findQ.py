@@ -15,9 +15,12 @@ Omega = 2*pi*f/w_0
 w_0 = sqrt(k/m)
 '''
 
+from matplotlib.figure import Figure
 from numpy import *
 from matplotlib.pyplot import *
 import sys
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 def obtain_data(filename):
 	data_array = np.genfromtxt(filename,delimiter=',',dtype='f',skip_header=1)
@@ -65,15 +68,19 @@ def main(filename, f_low, f_high, titleStr = ''):
 	f2 = f[dn]		+(E[dn]-E0/2)/(E[dn]-E[dn+1])	*(f[dn+1]-f[dn])
 	Q = f0/(f2 - f1)	# Q roughly the max freq over the range
 
-	plot(f, g2)
+	fig = figure()
+	plt = plot(f, g2)
+	#canvas = FigureCanvas(fig)
 	ylabel('Ratio of Accelerations')
 	xlabel('Frequency [Hz]')
 	title(titleStr + ' Q = '+ '%.1f' % Q)
 	plot([f1, f2], [E0/2, E0/2], 'k')
 	text(f0, E0*0.55, 'df = '+ '%.1f' % (f2-f1) +' Hz', ha='center')
 	text(f0, E0*0.45, '@ '+ '%.1f' % (f0) +' Hz', ha='center')
-	xlim(10,60)
-	show()
+	xlim(10,100)
+	#NavigationToolbar(canvas,fig)
+	savefig(filename[0:-4]+'-Qvalue.png')
+	#show()
 	
 if __name__ == "__main__":
 	main(sys.argv[1],sys.argv[2],sys.argv[3])
