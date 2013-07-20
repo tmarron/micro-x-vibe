@@ -57,7 +57,22 @@ def plotXferAB(fnumAin, fnumAout, fnumBin, fnumBout, titleStr='',pdf=None,legend
 	ampA = sqrt(ampAout/ampAin)
 	ampB = sqrt(ampBout/ampBin)
 	plotTwo(freq, ampA, ampB, titleStr, pdf, legendNames)
-	
+
+# writes amplitude 1/amplitude 2:
+def writeXfer(f1, f2, valuename, fname): 
+	freq, amp1 = readSpectrum(rootdir+str(f1)+'.txt')
+	freq, amp2 = readSpectrum(rootdir+str(f2)+'.txt')
+
+	# data given in V^2, so need to take root for xfer function:
+	xfer = sqrt(amp1)/sqrt(amp2)
+
+	n = '\n'
+	fp = open(fname,'w')
+	fp.write('frequency (Hz),' + valuename + n)
+	for i in range(len(freq)):
+		fp.write(str(freq[i]) + ',' + str(xfer[i]) + n)
+	fp.close()
+
 def makeWithWithoutSummary():
 	# with and without shims:
 	pp = PdfPages(rootdir+'withwithout.pdf')
@@ -77,6 +92,7 @@ def makeXferSummary():
 	pp = PdfPages(rootdir+'xfer.pdf')
 	#	lid/skin
 	plotXferAB(28,29,19,20, 'XFER lid/skin Z', pp, ['with shims','without'])
+	writeXfer(19,20,'skin/lmo transfer (unitless)','skin-lmo-xfer.txt')
 	plotXferAB(25,26,22,23, 'XFER lid/skin Y', pp, ['with shims','without'])
 	#	insert/skin
 	plotXferAB(28,1,29,10, 'XFER insert/skin Z', pp, ['with shims','without'])
